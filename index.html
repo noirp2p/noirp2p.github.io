@@ -53,6 +53,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .cats{display:flex;gap:7px;overflow-x:auto;padding:4px 2px}.cat{width:44px;height:44px;border-radius:12px;font-size:20px;flex:none}.cat.on{box-shadow:0 0 0 3px var(--G)}
 .cl{text-align:center;font-size:13px;font-weight:700;margin-top:4px}
 .note{width:100%;background:#fff;border:1px solid #e6ddcc;border-radius:16px;padding:12px;margin-top:8px;font-size:14px;font-family:inherit}
+.rb2{width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--L);font-size:18px;font-weight:700}
+.menu{position:absolute;right:0;top:50px;z-index:3;background:var(--G);color:var(--C);border-radius:18px;padding:8px;min-width:200px;box-shadow:0 10px 30px rgba(0,0,0,.3)}.menu button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:15px;border-radius:10px}.menu .mh{font-size:12px;color:var(--B);padding:8px 12px 2px;border-top:1px solid #4a4a4a;margin-top:4px}
+.pill2{display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid #e6ddcc;border-radius:16px;padding:12px 14px;font-size:14px;cursor:pointer}
+.kp4{display:grid;grid-template-columns:1fr 1fr 1fr .75fr;gap:7px;margin-top:10px}.k.op{background:#efe8da}
 .kp{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:10px}.k{background:#fff;border:1px solid var(--L);border-radius:14px;height:48px;font-size:21px;font-weight:600}
 .ssn{display:flex;justify-content:space-between;align-items:center;background:var(--G);color:var(--C);border-radius:16px;padding:10px 14px;margin-top:8px;font-size:14px;font-weight:700}.ssn small{color:var(--B);font-weight:500;font-size:12px}
 .podw{display:flex;justify-content:center;align-items:flex-end;gap:10px;margin-top:18px}.pc{flex:1;max-width:110px;display:flex;flex-direction:column;align-items:center}
@@ -73,7 +77,27 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .namebox{display:flex;gap:8px;margin-top:12px}.namebox input{flex:1;min-width:0;background:#fff;border:1px solid #e6ddcc;border-radius:14px;padding:12px 14px;font-size:15px;font-family:inherit}.namebox button{background:var(--G);color:var(--C);border-radius:14px;padding:0 16px;font-weight:700}
 .err{color:var(--T);font-size:13px;margin:6px 4px 0;min-height:0}
 .toast{pointer-events:none;position:fixed;left:50%;bottom:calc(170px + var(--sbot));transform:translate(-50%,20px);background:var(--G);color:var(--C);padding:10px 16px;border-radius:14px;font-size:14px;font-weight:600;opacity:0;transition:.3s;z-index:40;white-space:nowrap}.toast.on{opacity:1;transform:translate(-50%,0)}
-.view{animation:fade .35s ease both}@keyframes fade{from{opacity:0;transform:translateY(8px)}}
+.view>*{animation:up .45s cubic-bezier(.2,.9,.3,1) both}@keyframes up{from{opacity:0;transform:translateY(14px)}}
+#splash{position:fixed;inset:0;z-index:100;background:var(--G);display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .5s}
+#splash.off{opacity:0;pointer-events:none}
+#splash circle{stroke-dasharray:440;stroke-dashoffset:440;animation:ring 1.1s .1s ease-out forwards}@keyframes ring{to{stroke-dashoffset:0}}
+#splash h1{font-family:Georgia,serif;font-weight:400;color:var(--C);font-size:40px;margin:22px 0 0;opacity:0;animation:fi .6s .7s forwards}
+#splash p{color:var(--B);margin:6px 0 0;font-size:14px;opacity:0;animation:fi .6s .9s forwards}@keyframes fi{to{opacity:1}}
+#tour{position:fixed;inset:0;z-index:60;display:none}#tour.on{display:block}
+#tcatch{position:absolute;inset:0}
+#spot{position:fixed;border-radius:18px;box-shadow:0 0 0 9999px rgba(18,18,18,.66),0 0 0 3px var(--P);transition:all .35s cubic-bezier(.3,.9,.3,1);pointer-events:none}
+#tip{position:fixed;left:16px;right:16px;max-width:448px;margin:0 auto;background:var(--C);border-radius:20px;padding:16px;box-shadow:0 10px 30px rgba(0,0,0,.35);transition:top .35s}
+#tip p{margin:0 0 12px;font-size:15px;line-height:1.4}#tip .tr2{display:flex;justify-content:space-between;align-items:center}#tip small{opacity:.5}
+#tip button{background:var(--P);border-radius:12px;padding:10px 20px;font-weight:800}
+#tip.shake{animation:shake .4s}@keyframes shake{20%,60%{transform:translateX(-8px)}40%,80%{transform:translateX(8px)}}
+#intro{position:fixed;inset:0;background:rgba(18,18,18,.72);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:24px}
+#intro .ic{width:120px;height:120px;border-radius:36px;background:var(--G);color:var(--P);display:flex;align-items:center;justify-content:center;box-shadow:0 0 0 6px rgba(242,198,204,.3),0 0 60px 10px rgba(242,198,204,.35);animation:pop .7s cubic-bezier(.2,1.4,.4,1)}@keyframes pop{from{transform:scale(.5)}}
+#intro h2{font-family:Georgia,serif;font-weight:400;color:var(--C);font-size:44px;margin:24px 0 6px}#intro .ln{width:44px;height:3px;border-radius:2px;background:var(--P);margin:4px auto 12px}
+#intro p{color:var(--B);margin:0;max-width:280px;line-height:1.45}#intro button{margin-top:26px;background:var(--P);border-radius:14px;padding:12px 34px;font-weight:800}
+#hint{position:fixed;left:0;right:0;bottom:calc(30px + var(--sbot));text-align:center;color:var(--C);font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}#hint.on{opacity:1}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}.cal span{font-size:12px;opacity:.5;text-align:center;padding:4px 0}
+.cal button{height:40px;border-radius:12px;font-weight:600;font-size:15px}.cal .rg{background:#efe8da;border-radius:0}.cal .se{background:var(--G);color:var(--C)}.cal button:disabled{opacity:.25}
+.calh{display:flex;justify-content:space-between;align-items:center;margin-top:6px}.calh b{font-size:17px}.calh button{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--L);font-size:18px}
 </style>
 </head>
 <body>
@@ -82,6 +106,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 <div class="dim" id="dim"></div>
 <div class="sheet" id="sheet"><div class="in" id="sheetIn"></div></div>
 <div class="toast" id="toast"></div>
+<div id="tour"><div id="tcatch"></div><div id="spot"></div><div id="tip"><p id="ttext"></p><div class="tr2"><small id="tnum"></small><button id="tnext">Далее</button></div></div><div id="intro" style="display:none"></div><div id="hint">Нажмите «Далее», чтобы продолжить</div></div>
+<div id="splash"><svg width="150" height="150" viewBox="0 0 150 150"><circle cx="75" cy="75" r="70" fill="none" stroke="#CCBAAA" stroke-width="2"/><text x="75" y="92" text-anchor="middle" font-family="Georgia,serif" font-size="52" fill="#F9F5E9">N</text><circle cx="118" cy="38" r="6" fill="#F2C6CC" style="stroke-dasharray:none;animation:none"/></svg><h1>Noir P2P</h1><p>ваш P2P под контролем</p></div>
 <script>
 const tg = window.Telegram && Telegram.WebApp;
 if (tg) { tg.ready(); tg.expand();
@@ -90,7 +116,7 @@ if (tg) { tg.ready(); tg.expand();
 const U = (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) || {first_name:'Стас', username:'stas_p2p'};
 const $ = s => document.querySelector(s);
 const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const fmt = n => Math.round(n).toLocaleString('ru-RU').replace(/,/g,' ');
+const fmt = n => (Math.round(n)||0).toLocaleString('ru-RU').replace(/,/g,' ');
 const hap = (t='light') => { try { tg.HapticFeedback.impactOccurred(t) } catch(e){} };
 const store = { get(k,d){ try{ const v=localStorage.getItem('noir_'+k); return v===null?d:JSON.parse(v) }catch(e){ return d } },
                 set(k,v){ try{ localStorage.setItem('noir_'+k, JSON.stringify(v)) }catch(e){} } };
@@ -109,11 +135,16 @@ const DAYS = [620,940,410,1180,860,1240,1670];
 const ORDERS = [['14:02','Продажа',2500,41.65],['13:47','Покупка',5000,41.02],['13:21','Продажа',4100,41.58],['12:58','Продажа',3300,41.70],['12:30','Покупка',10000,41.05],['11:54','Продажа',6200,41.61]];
 const CAT = {p2p:['⇄','P2P','#353535','#F9F5E9'],home:['🛋','Жильё','#CCBAAA'],food:['🍔','Еда','#E8B4A0'],cafe:['☕','Кафе','#F2C6CC'],tr:['🚌','Транспорт','#d8cfc0'],fun:['🎮','Игры','#B9A6C9'],gift:['🎁','Подарки','#D9826F','#F9F5E9'],biz:['💼','Бизнес','#8a8a8a','#F9F5E9'],bud:['💵','Зарплата','#E4DCCD']};
 const EXP_CATS = ['food','home','cafe','tr','fun','gift'], INC_CATS = ['p2p','biz','bud','gift'];
-let TX = store.get('tx', [
-  {d:'Сегодня',k:'p2p',src:'Авто · из P2P',a:1465},{d:'Сегодня',k:'home',src:'',a:-546},{d:'Сегодня',k:'food',src:'',a:-134},
-  {d:'Вчера',k:'p2p',src:'Авто · из P2P',a:991},{d:'Вчера',k:'food',src:'',a:-39}]);
-const PEOPLE = [['shadow_p2p',4820],['Lena_usdt',4310],['Max_K',3975],['oleg.trade',3410],['Kira',2980],['dmytro_p2p',2655],['vlad',2390]];
-const ME = {place:12, pts:1240, streak:5};
+const CUR={UAH:['₴',1],USD:['$',41.5],EUR:['€',45],USDT:['USDT',41.6]};
+const now0=Date.now(), H=36e5;
+let TX = store.get('tx2', []);
+const uah = t => t.a*CUR[t.cur||'UAH'][1];
+const money = (v,cur='UAH') => (cur==='USDT'? fmt(v)+' USDT' : fmt(v)+' '+CUR[cur][0]);
+function dayLabel(ts){ const d=new Date(ts); d.setHours(0,0,0,0); const t=new Date(); t.setHours(0,0,0,0); const diff=Math.round((t-d)/864e5);
+  return diff===0?'Сегодня':diff===1?'Вчера':d.getDate()+' '+MON[d.getMonth()] }
+// Пока Binance не подключён и нет сервера — всё по нулям (реальные цифры появятся на шаге 5)
+const PEOPLE = [];
+const ME = {place:'—', pts:0, streak:1};
 
 // ---------- проверка имени ----------
 const NAMES = new Set(('станислав стас александр саша алексей артем артём андрей антон богдан борис вадим валентин валерий василий виктор виталий владимир владислав влад вячеслав глеб григорий даниил данил денис дмитрий дима евгений егор иван игорь илья кирилл константин лев леонид максим макс марк матвей михаил миша назар никита николай олег павел петр пётр роман руслан сергей степан тарас тимур тимофей федор фёдор юрий ярослав ярик остап орест захар данило дмитро олександр олексій андрій богдан василь віталій володимир євген ігор ілля кирило максим микола михайло назар олег павло петро роман сергій тарас юрій ярослав '+
@@ -133,113 +164,191 @@ const topBar = () => `<div class="top"><button class="exit" onclick="exitApp()">
 function vHome(){
   const name = store.get('name');
   const hello = name
-    ? `<div style="display:flex;align-items:center;gap:12px;margin-top:10px">${avatar(52)}<div><div style="font-size:13px;opacity:.6">Привет 👋</div><div style="font-size:22px;font-weight:800">${esc(name)}</div><div style="font-size:12px;opacity:.6">${esc(nickName)} · ${ME.pts} очков</div></div><div style="margin-left:auto;font-size:22px">🔔</div></div>`
-    : `<div class="card lt"><b style="font-size:16px">Как вас зовут?</b><div class="lb" style="margin-top:4px">Впишите настоящее имя: так приложение будет к вам обращаться</div>
+    ? `<div data-t="hello" style="display:flex;align-items:center;gap:12px;margin-top:10px">${avatar(52)}<div><div style="font-size:13px;opacity:.6">Привет 👋</div><div style="font-size:22px;font-weight:800">${esc(name)}</div><div style="font-size:12px;opacity:.6">${esc(nickName)} · ${ME.pts} очков</div></div><div style="margin-left:auto;font-size:22px">🔔</div></div>`
+    : `<div class="card lt" data-t="hello"><b style="font-size:16px">Как вас зовут?</b><div class="lb" style="margin-top:4px">Впишите настоящее имя: так приложение будет к вам обращаться</div>
        <div class="namebox"><input id="nameIn" maxlength="20" placeholder="Например, Станислав" autocomplete="off"><button onclick="saveName()">Сохранить</button></div><div class="err" id="nameErr"></div></div>`;
   const pts = [8,12,9,15,13,18,16,22,19,24,21,27,25,30], W=320,H=90, mx=Math.max(...pts);
   const P = pts.map((v,i)=>[i*W/(pts.length-1), H-v/mx*H*.9]);
   const line = P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
   return `${topBar()}${hello}
-  <div class="card"><div class="lb">Прибыль сегодня</div><div class="big">▲ 1 240 ₴</div><div class="lb">Оборот 186 400 ₴ · 47 ордеров</div></div>
-  <div class="row"><div class="card"><div class="lb">Неделя</div><div class="md">▲ 6 930 ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">1,4%</div></div></div>
-  <button class="pbtn" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
-  <div class="card"><div style="display:flex;justify-content:space-between"><span class="lb">Доходы за ноябрь</span><b>▲ 24 380 ₴</b></div>
-  <svg viewBox="0 0 ${W} ${H+4}" style="width:100%;margin-top:10px"><defs><linearGradient id="gr" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#F2C6CC" stop-opacity=".55"/><stop offset="1" stop-color="#F2C6CC" stop-opacity="0"/></linearGradient></defs>
-  <path d="${line} L${W} ${H} L0 ${H}Z" fill="url(#gr)"/><path d="${line}" fill="none" stroke="#F2C6CC" stroke-width="2.5" stroke-linecap="round"/></svg>
-  <div style="display:flex;justify-content:space-between" class="lb"><span>1 ноя</span><span>15</span><span>30</span></div></div>`;
+  <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">0 ₴</div><div class="lb">Оборот 0 ₴ · 0 ордеров</div></div>
+  <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">0 ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">0%</div></div></div>
+  <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
+  <div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="toast('Подключение Binance — на шаге 5 🔑')">Подключить API Binance</button></div>`;
 }
-let p2pPeriod='Неделя', p2pFilter='Все';
+let p2pPeriod='Неделя', p2pFilter='Все', custom=null;
+const PER = {
+ 'Сегодня':{profit:1240,usdt:30,cmp:'▲ 12% ко вчера',turn:'186 400 ₴',ord:47,spr:'1,4%',buy:'41,08',sell:'41,66',bt:'Прибыль по часам',bl:['8:00','10:00','12:00','14:00','16:00','18:00'],bv:[90,160,240,180,330,240],best:'лучший час — 16:00'},
+ 'Неделя':{profit:6930,usdt:166,cmp:'▲ 18% к прошлой неделе',turn:'1,2 млн ₴',ord:312,spr:'1,4%',buy:'41,05',sell:'41,62',bt:'Прибыль по дням',bl:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],bv:DAYS,best:'лучший день — Вс'},
+ 'Месяц':{profit:24380,usdt:587,cmp:'▲ 9% к октябрю',turn:'4,9 млн ₴',ord:1284,spr:'1,3%',buy:'40,98',sell:'41,51',bt:'Прибыль по неделям',bl:['1–7','8–14','15–21','22–30'],bv:[5120,6480,5900,6880],best:'лучшая неделя — 22–30'}};
+const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+function customPer(a,b){ const days=Math.round((b-a)/864e5)+1, bv=[], bl=[];
+  for(let i=0;i<days;i++){ const d=new Date(+a+i*864e5); bl.push(String(d.getDate())); bv.push(600+((d.getDate()*397)%1100)) }
+  let pv=bv, pl=bl; if(days>10){ pv=[];pl=[]; const step=Math.ceil(days/7); for(let i=0;i<days;i+=step){ pv.push(bv.slice(i,i+step).reduce((x,y)=>x+y,0)); pl.push(bl[i]+(step>1?'–'+bl[Math.min(i+step,days)-1]:'')) } }
+  const profit=bv.reduce((x,y)=>x+y,0), mx=Math.max(...pv);
+  return {profit,usdt:Math.round(profit/41.6),cmp:days+' дн. · свой период',turn:(profit*172/1e6).toFixed(1).replace('.',',')+' млн ₴',ord:days*45,spr:'1,4%',buy:'41,04',sell:'41,61',bt:'Прибыль за период',bl:pl,bv:pv,best:'лучший — '+pl[pv.indexOf(mx)]} }
+const perLabel = () => !custom ? p2pPeriod.toLowerCase() : custom.a.getMonth()===custom.b.getMonth() ? custom.a.getDate()+'–'+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3) : custom.a.getDate()+' '+MON[custom.a.getMonth()].slice(0,3)+' – '+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3);
 function vP2P(){
-  const mx=Math.max(...DAYS), dn=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'];
-  const bars = DAYS.map((b,i)=>`<div class="bc"><div class="bv">${fmt(b)}</div><div class="bar" style="height:${Math.round(b/mx*110)}px;${b===mx?'background:#F2C6CC':''}"></div><div class="bd">${dn[i]}</div></div>`).join('');
+  const D0 = custom ? customPer(custom.a,custom.b) : PER[p2pPeriod];
+  const D = {...D0, profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0%', buy:'—', sell:'—', bv:D0.bv.map(()=>0), best:''}, mx=1;
+  const bars = D.bv.map((b,i)=>`<div class="bc"><div class="bv">${fmt(b)}</div><div class="bar" style="height:${Math.round(b/mx*110)}px;${b===mx?'background:#F2C6CC':''};animation:up .5s ${i*.05}s both"></div><div class="bd">${D.bl[i]}</div></div>`).join('');
   const ords = ORDERS.filter(o=>p2pFilter==='Все'||(p2pFilter==='Покупка')===(o[1]==='Покупка'))
     .map(([t,k,a,r])=>`<div class="ord"><div class="oi ${k==='Покупка'?'b':'s'}">${k==='Покупка'?'↓':'↑'}</div><div><div class="ot">${k} · ${fmt(a)} ₴</div><div class="os">${t} · курс ${String(r).replace('.',',')} ₴ · USDT</div></div></div>`).join('');
-  return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">● Binance · пример данных</span></div>
-  <div class="chips">${['Сегодня','Неделя','Месяц','📅 Период'].map(c=>`<button class="${c===p2pPeriod?'on':''}" onclick="p2pPeriod='${c}';render()">${c}</button>`).join('')}</div>
-  <div class="card"><div class="lb">Чистая прибыль · ${p2pPeriod.toLowerCase()}</div><div class="big">▲ 6 930 ₴</div><div class="lb">≈ 166 USDT · ▲ 18% к прошлому периоду</div>
-  <div class="g3"><div><span class="lb">Оборот</span><b>1,2 млн ₴</b></div><div><span class="lb">Ордеров</span><b>312</b></div><div><span class="lb">Спред</span><b>1,4%</b></div></div></div>
-  <div class="row"><div class="card lt"><div class="lb">↓ Купил USDT</div><div class="md">41,05 ₴</div><div class="lb" style="font-size:12px">средний курс</div></div><div class="card lt"><div class="lb">↑ Продал USDT</div><div class="md">41,62 ₴</div><div class="lb" style="font-size:12px">средний курс</div></div></div>
-  <div class="card"><div style="display:flex;justify-content:space-between"><span class="lb">Прибыль по дням</span><span class="lb">лучший день — Вс</span></div><div class="bars">${bars}</div></div>
-  <div class="sh"><b>Ордера</b><div class="seg">${['Все','Покупка','Продажа'].map(c=>`<button class="${c===p2pFilter?'on':''}" onclick="p2pFilter='${c}';render()">${c}</button>`).join('')}</div></div>
-  <div class="card lt" style="padding:4px 16px">${ords}</div>
-  <button class="pbtn" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек по ордеру</button>`;
+  return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">○ Binance не подключён</span></div>
+  <div class="chips" data-t="chips">${['Сегодня','Неделя','Месяц'].map(c=>`<button class="${!custom&&c===p2pPeriod?'on':''}" onclick="custom=null;p2pPeriod='${c}';render()">${c}</button>`).join('')}<button class="${custom?'on':''}" onclick="openCal()">📅 ${custom?perLabel():'Период'}</button></div>
+  <div class="card" data-t="profit"><div class="lb">Чистая прибыль · ${perLabel()}</div><div class="big">0 ₴</div><div class="lb">≈ ${fmt(D.usdt)} USDT · ${D.cmp}</div>
+  <div class="g3"><div><span class="lb">Оборот</span><b>${D.turn}</b></div><div><span class="lb">Ордеров</span><b>${fmt(D.ord)}</b></div><div><span class="lb">Спред</span><b>${D.spr}</b></div></div></div>
+  <div class="row" data-t="rates"><div class="card lt"><div class="lb">↓ Купил USDT</div><div class="md">${D.buy} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div><div class="card lt"><div class="lb">↑ Продал USDT</div><div class="md">${D.sell} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div></div>
+  <div class="card" data-t="bars"><div style="display:flex;justify-content:space-between"><span class="lb">${D.bt}</span><span class="lb">${D.best}</span></div><div class="bars" style="height:auto;min-height:60px;align-items:center;justify-content:center"><span class="lb">Здесь появится прибыль, когда подключите Binance</span></div></div>
+  <div class="sh" data-t="orders"><b>Ордера</b><div class="seg">${['Все','Покупка','Продажа'].map(c=>`<button class="${c===p2pFilter?'on':''}" onclick="p2pFilter='${c}';render()">${c}</button>`).join('')}</div></div>
+  <div class="card lt" style="text-align:center;padding:22px 16px"><span class="lb">Пока нет ордеров — они подтянутся из Binance автоматически</span></div>
+  <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек по ордеру</button>`;
 }
 function vFin(){
-  const inc = TX.filter(t=>t.a>0).reduce((s,t)=>s+t.a,0), exp = -TX.filter(t=>t.a<0).reduce((s,t)=>s+t.a,0);
-  const groups = {}; TX.forEach(t=>(groups[t.d]=groups[t.d]||[]).push(t));
-  const list = Object.entries(groups).map(([d,ts])=>{ const sum=ts.reduce((s,t)=>s+t.a,0);
+  const real = TX.filter(t=>!t.debt);
+  const inc = real.filter(t=>t.a>0).reduce((s,t)=>s+uah(t),0), exp = -real.filter(t=>t.a<0).reduce((s,t)=>s+uah(t),0);
+  const sorted=[...TX].sort((x,y)=>y.ts-x.ts), groups={}; sorted.forEach(t=>(groups[dayLabel(t.ts)]=groups[dayLabel(t.ts)]||[]).push(t));
+  const list = Object.entries(groups).map(([d,ts])=>{ const sum=ts.filter(t=>!t.debt).reduce((s,t)=>s+uah(t),0);
     return `<div class="dh"><span>${d}</span><b>${sum>=0?'+':'−'}${fmt(Math.abs(sum))} ₴</b></div>`+ts.map(t=>{const c=CAT[t.k];
-      return `<div class="tr"><div class="ti" style="background:${c[2]};color:${c[3]||'#353535'}">${c[0]}</div><div style="flex:1;min-width:0"><b>${c[1]}</b>${t.src||t.n?`<small>${esc(t.n||t.src)}</small>`:''}</div><div class="ta ${t.a<0?'m':''}">${t.a>0?'+':'−'}${fmt(Math.abs(t.a))} ₴</div></div>`}).join('')}).join('');
+      const sub=[t.debt?(t.a>0?'Мне должны':'Я должен')+(t.who?' · '+esc(t.who):''):'', t.n?esc(t.n):(t.src||'')].filter(Boolean).join(' · ');
+      return `<button class="tr" style="width:100%;text-align:left" onclick="openSheet(${t.id})"><div class="ti" style="background:${t.debt?'#E4DCCD':c[2]};color:${c[3]||'#353535'}">${t.debt?'🤝':c[0]}</div><div style="flex:1;min-width:0"><b>${t.debt?'Долг':c[1]}</b>${sub?`<small>${sub}</small>`:''}</div><div class="ta ${t.a<0?'m':''}">${t.a>0?'+':'−'}${money(Math.abs(t.a),t.cur||'UAH')}</div></button>`}).join('')}).join('');
   return `${topBar()}<h1 class="ttl">Финансы</h1>
-  <div style="text-align:center;margin-top:8px"><span style="font-size:14px;opacity:.6">Итог за этот месяц</span><div style="font-size:46px;font-weight:800;letter-spacing:-1px;margin-top:4px">${inc-exp<0?"−":""}${fmt(Math.abs(inc-exp))} ₴</div>
+  <div data-t="total" style="text-align:center;margin-top:8px"><span style="font-size:14px;opacity:.6">Итог за этот месяц</span><div style="font-size:46px;font-weight:800;letter-spacing:-1px;margin-top:4px">${inc-exp<0?"−":""}${fmt(Math.abs(inc-exp))} ₴</div>
   <div style="display:flex;justify-content:center;gap:22px;font-weight:700;font-size:17px"><span>▲ ${fmt(inc)} ₴</span><span style="color:var(--T)">▼ ${fmt(exp)} ₴</span></div></div>
-  ${list}<div style="height:60px"></div>`;
+  <div data-t="list">${list||'<div class="card lt" style="text-align:center;padding:22px 16px;margin-top:18px"><div style="font-size:30px">💸</div><b style="display:block;margin-top:6px">Пока нет операций</b><div class="lb" style="margin-top:4px">Нажмите «＋», чтобы добавить расход или доход</div></div>'}</div><div style="height:60px"></div>`;
 }
 function vRat(){
-  const top = PEOPLE.slice(0,3), h={1:118,2:88,3:70};
-  const pod = [2,1,3].map(k=>{const [n,p]=top[k-1];
-    return `<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:${['#CCBAAA','#F2C6CC','#E4DCCD'][k-1]};box-shadow:0 0 0 3px ${k===1?'#F2C6CC':'#CCBAAA'}">${n[0].toUpperCase()}</div><div class="pn">${esc(n)}</div><div class="pp">${fmt(p)} очк.</div><div class="pod" style="height:${h[k]}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>`}).join('');
-  const rows = PEOPLE.slice(3).map(([n,p],i)=>`<div class="lr"><div class="pl">${i+4}</div><div class="av" style="width:40px;height:40px;font-size:16px;background:#E4DCCD">${n[0].toUpperCase()}</div><b>${esc(n)}</b><div class="pts">${fmt(p)}<small>очков</small></div></div>`).join('');
   const show = store.get('showRating', true);
-  return `${topBar()}<h1 class="ttl">Рейтинг</h1><div class="ssn"><span>🏆 Сезон 2026</span><small>сброс 1 января · призы скоро</small></div>
-  <div class="podw">${pod}</div>${rows}<div style="height:70px"></div>
-  ${show?`<div class="mine"><div class="in"><div class="pl">${ME.place}</div>${avatar(40,'#353535')}<div><b>Вы · ${esc(store.get('name')||nickName)}</b><small>до 11 места — 85 очков</small></div><div class="pts">${fmt(ME.pts)}<small>очков</small></div></div></div>`:''}`;
+  return `${topBar()}<h1 class="ttl">Рейтинг</h1><div class="ssn" data-t="season"><span>🏆 Сезон 2026</span><small>сброс 1 января · призы скоро</small></div>
+  <div class="podw" data-t="podium">${[2,1,3].map(k=>`<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:#efe8da;color:#b9ad9a">?</div><div class="pn" style="opacity:.5">свободно</div><div class="pp">0 очк.</div><div class="pod" style="height:${({1:118,2:88,3:70})[k]}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>`).join('')}</div>
+  <div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">Рейтинг заполнится, когда в боте появятся участники</span></div><div style="height:70px"></div>
+  ${show?`<div class="mine"><div class="in" data-t="mine"><div class="pl">${ME.place}</div>${avatar(40,'#353535')}<div><b>Вы · ${esc(store.get('name')||nickName)}</b><small>сезон только начался</small></div><div class="pts">${fmt(ME.pts)}<small>очков</small></div></div></div>`:''}`;
 }
 function vPro(){
   const sw = (k,d) => `<span class="sw ${store.get(k,d)?'on':''}"><i></i></span>`;
   return `${topBar()}<h1 class="ttl">Профиль</h1>
-  <div class="card" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
-  <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} дней</span></div></div></div>
-  <div class="gt">Binance</div><div class="grp"><button class="it" onclick="toast('Подключение Binance — на шаге 5 🔑')"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button></div>
-  <div class="gt">Настройки</div><div class="grp">
+  <div class="card" data-t="pcard" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
+  <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${ME.streak===1?'день':'дней'}</span></div></div></div>
+  <div class="gt">Binance</div><div class="grp" data-t="bin"><button class="it" onclick="toast('Подключение Binance — на шаге 5 🔑')"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button></div>
+  <div class="gt">Настройки</div><div class="grp" data-t="set">
    <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><b>Показывать меня в рейтинге</b>${sw('showRating',true)}</button>
    <button class="it" onclick="tog('notif',true)"><span class="ie">🔔</span><b>Уведомления</b>${sw('notif',true)}</button>
    <button class="it" onclick="toast('Стартовый остаток — на шаге 5')"><span class="ie">💵</span><span><b>Стартовый остаток USDT</b><small>не указан</small></span><span class="ir">›</span></button></div>
-  <div class="gt">Помощь</div><div class="grp">
-   <button class="it" onclick="toast('Обучение — на шаге 8 🎓')"><span class="ie">🎓</span><b>Пройти обучение заново</b><span class="ir">›</span></button>
+  <div class="gt">Помощь</div><div class="grp" data-t="help">
+   <button class="it" onclick="resetTours()"><span class="ie">🎓</span><b>Пройти обучение заново</b><span class="ir">›</span></button>
    <button class="it" onclick="exitApp()"><span class="ie">🤖</span><span><b>ИИ-помощник</b><small>задать вопрос в чате бота</small></span><span class="ir">›</span></button>
    <button class="it pk" onclick="openLink('https://t.me/Stanshab')"><span class="ie">⭐</span><span><b>Платная консультация</b><small>лично со Станиславом в Telegram</small></span><span class="ir">›</span></button></div>
-  <button class="del" onclick="delData()">Удалить мои данные</button>`;
+  <button class="del" data-t="del" onclick="delData()">Удалить мои данные</button>`;
 }
 
-// ---------- лист добавления ----------
-let sh = {mode:'exp', amt:'0', cat:'food', note:''};
-function openSheet(){ sh={mode:'exp',amt:'0',cat:'food',note:''}; drawSheet(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
+// ---------- лист добавления / редактирования ----------
+let sh={};
+const pad2=n=>String(n).padStart(2,'0');
+function openSheet(id){ const t=id?TX.find(x=>x.id===id):null;
+  sh = t ? {id, mode:t.a<0?'exp':'inc', expr:String(Math.abs(t.a)), cat:t.k, note:t.n||'', ts:t.ts, cur:t.cur||'UAH', debt:!!t.debt, who:t.who||'', menu:false}
+         : {id:null, mode:'exp', expr:'0', cat:'food', note:'', ts:Date.now(), cur:'UAH', debt:false, who:'', menu:false};
+  drawSheet(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
 function closeSheet(){ $('#dim').classList.remove('on'); $('#sheet').classList.remove('on') }
+function calc(e){ const x=e.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/,/g,'.').replace(/[^0-9.+\-*/]/g,'').replace(/[+\-*/.]+$/,'');
+  if(!x) return 0; try{ const v=Function('"use strict";return ('+x+')')(); return isFinite(v)?Math.max(0,Math.round(v*100)/100):0 }catch(_){ return 0 } }
+const shAmt = () => /[+−×÷]/.test(sh.expr.slice(1)) ? sh.expr.replace(/,/g,',') : (sh.expr==='0'?'0':sh.expr);
 function drawSheet(){
-  const cats = sh.mode==='exp'?EXP_CATS:INC_CATS;
-  if (!cats.includes(sh.cat)) sh.cat = cats[0];
-  $('#sheetIn').innerHTML = `<div class="grab"></div><div class="tg2"><button class="${sh.mode==='inc'?'on':''}" onclick="sh.mode='inc';drawSheet()">▲ Доход</button><button class="${sh.mode==='exp'?'on':''}" onclick="sh.mode='exp';drawSheet()">▼ Расход</button></div>
-  <div class="amt">${fmt(+sh.amt)} ₴</div>
-  <div class="cats">${cats.map(k=>`<button class="cat ${k===sh.cat?'on':''}" style="background:${CAT[k][2]};color:${CAT[k][3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${CAT[k][0]}</button>`).join('')}</div><div class="cl">${CAT[sh.cat][1]}</div>
+  const cats = sh.mode==='exp'?EXP_CATS:INC_CATS; if(!cats.includes(sh.cat)) sh.cat=cats[0];
+  const isExpr=/[+−×÷]/.test(sh.expr.slice(1));
+  $('#sheetIn').innerHTML = `<div class="grab"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
+    <button class="rb2" onclick="closeSheet()">✕</button>
+    <div class="tg2" style="margin:0"><button class="${sh.mode==='inc'?'on':''}" onclick="sh.mode='inc';drawSheet()">▲ ${sh.debt?'Мне должны':'Доход'}</button><button class="${sh.mode==='exp'?'on':''}" onclick="sh.mode='exp';drawSheet()">▼ ${sh.debt?'Я должен':'Расход'}</button></div>
+    <button class="rb2" onclick="sh.menu=!sh.menu;drawSheet()">⋮</button>
+    ${sh.menu?`<div class="menu"><button onclick="repeatTx()">🔁 Повтор</button>${sh.id?`<button style="color:var(--T)" onclick="delTx()">🗑 Удалить</button>`:''}<div class="mh">Вид</div>
+      <button onclick="sh.debt=true;sh.menu=false;drawSheet()">${sh.debt?'✓ ':''}🤝 Долг</button><button onclick="sh.debt=false;sh.menu=false;drawSheet()">${!sh.debt?'✓ ':''}🧮 Калькулятор</button></div>`:''}
+  </div>
+  <div class="amt" style="${isExpr?'font-size:30px':''}">${esc(shAmt())} ${CUR[sh.cur][0]}${isExpr?`<div style="font-size:16px;opacity:.5">= ${fmt(calc(sh.expr))} ${CUR[sh.cur][0]}</div>`:''}</div>
+  <div style="position:relative"><button class="pill2" style="width:100%" onclick="sh.cm=!sh.cm;drawSheet()"><span style="opacity:.55">Валюта:</span>&nbsp;<b>${sh.cur==='USDT'?'USDT':CUR[sh.cur][0]+' '+sh.cur}</b>&nbsp;<span style="opacity:.4">▾</span></button>
+  ${sh.cm?`<div class="menu" style="left:0;right:0;top:52px">${Object.keys(CUR).map(c=>`<button onclick="sh.cur='${c}';sh.cm=false;drawSheet()">${c===sh.cur?'✓ ':''}${{UAH:'₴ Гривна',USD:'$ Доллар',EUR:'€ Евро',USDT:'USDT'}[c]}</button>`).join('')}</div>`:''}</div>
+  ${sh.debt?`<input class="note" placeholder="${sh.mode==='exp'?'Кому я должен':'Кто мне должен'}" maxlength="30" value="${esc(sh.who)}" oninput="sh.who=this.value">`:''}
   <input class="note" placeholder="Заметка" maxlength="60" value="${esc(sh.note)}" oninput="sh.note=this.value">
-  <div class="kp">${['1','2','3','4','5','6','7','8','9','00','0','⌫'].map(x=>`<button class="k" onclick="key('${x}')">${x}</button>`).join('')}</div>
+  ${sh.debt?'':`<div class="cats" style="margin-top:8px">${cats.map(k=>`<button class="cat ${k===sh.cat?'on':''}" style="background:${CAT[k][2]};color:${CAT[k][3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${CAT[k][0]}</button>`).join('')}</div><div class="cl">${CAT[sh.cat][1]}</div>`}
+  <div class="kp4">${['1','2','3','+','4','5','6','−','7','8','9','×',',','0','⌫','÷'].map(x=>`<button class="k ${'+−×÷'.includes(x)?'op':''}" onclick="key('${x}')">${x}</button>`).join('')}</div>
   <button class="gbtn" onclick="saveTx()">Сохранить</button>`;
 }
-function key(x){ hap(); if(x==='⌫') sh.amt = sh.amt.length>1?sh.amt.slice(0,-1):'0'; else if(sh.amt.length<9) sh.amt = (sh.amt==='0'?'':sh.amt)+x; if(sh.amt==='00'||sh.amt==='') sh.amt='0'; $('.amt').textContent = fmt(+sh.amt)+' ₴' }
-function saveTx(){ const a=+sh.amt; if(!a){ toast('Введите сумму'); return }
-  TX.unshift({d:'Сегодня',k:sh.cat,src:'',n:sh.note.trim(),a:sh.mode==='exp'?-a:a}); store.set('tx',TX); closeSheet(); hap('medium'); render(); toast('Сохранено ✓') }
+function key(x){ hap(); let e=sh.expr;
+  if(x==='⌫') e = e.length>1?e.slice(0,-1):'0';
+  else if('+−×÷'.includes(x)) e = /[+−×÷,]$/.test(e) ? e.slice(0,-1)+x : e+x;
+  else if(x===','){ const last=e.split(/[+−×÷]/).pop(); if(!last.includes(',')) e+= (/[+−×÷]$/.test(e)?'0,':',') }
+  else e = (e==='0'?'':e)+x;
+  if(e.length>20) return; sh.expr=e; drawSheet() }
+function saveTx(){ const a=calc(sh.expr); if(!a){ toast('Введите сумму'); return }
+  const rec={id:sh.id||Date.now(), ts:sh.ts, k:sh.debt?(sh.mode==='exp'?'food':'bud'):sh.cat, n:sh.note.trim(), a:sh.mode==='exp'?-a:a, cur:sh.cur, debt:sh.debt, who:sh.who.trim()};
+  if(sh.debt) rec.k = sh.mode==='exp'?'gift':'gift';
+  const i=TX.findIndex(t=>t.id===rec.id); if(i>=0){ rec.src=TX[i].src; TX[i]=rec } else TX.push(rec);
+  store.set('tx2',TX); closeSheet(); hap('medium'); render(); toast('Сохранено ✓') }
+function repeatTx(){ const a=calc(sh.expr); if(!a){ toast('Введите сумму'); return } sh.id=null; sh.ts=Date.now(); sh.menu=false; saveTx(); toast('Повторено на сегодня ✓') }
+function delTx(){ const go=()=>{ TX=TX.filter(t=>t.id!==sh.id); store.set('tx2',TX); closeSheet(); render(); toast('Удалено') };
+  if(tg&&tg.showConfirm) tg.showConfirm('Удалить эту операцию?',ok=>ok&&go()); else go() }
 
 // ---------- действия ----------
 function saveName(){ const v=$('#nameIn').value, e=checkName(v); if(e){ $('#nameErr').textContent=e; try{tg.HapticFeedback.notificationOccurred('error')}catch(_){}; return }
   const n=v.trim(); store.set('name', n[0].toUpperCase()+n.slice(1).toLowerCase()); hap('medium'); render(); toast('Приятно познакомиться 👋') }
 function tog(k,d){ store.set(k,!store.get(k,d)); hap(); render() }
-function delData(){ const go=()=>{ ['name','tx','showRating','notif'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
+function delData(){ const go=()=>{ ['name','tx2','showRating','notif'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
   if (tg && tg.showConfirm) tg.showConfirm('Удалить все ваши данные из Noir P2P?', ok=>ok&&go()); else go() }
 function openLink(u){ if(tg&&tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u) }
 function exitApp(){ if(tg) tg.close(); }
+
+// ---------- календарь периода ----------
+let cal={m:null,a:null,b:null}; const TODAY=new Date(); TODAY.setHours(0,0,0,0);
+function openCal(){ cal={m:new Date(TODAY.getFullYear(),TODAY.getMonth(),1),a:custom?custom.a:null,b:custom?custom.b:null}; drawCal(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
+function drawCal(){ const y=cal.m.getFullYear(), m=cal.m.getMonth(), first=(new Date(y,m,1).getDay()+6)%7, n=new Date(y,m+1,0).getDate();
+  let cells=['Пн','Вт','Ср','Чт','Пт','Сб','Вс'].map(d=>`<span>${d}</span>`).join('')+'<i></i>'.repeat(first);
+  for(let d=1;d<=n;d++){ const t=new Date(y,m,d), ts=+t, a=cal.a&&+cal.a, b=cal.b&&+cal.b;
+    const cls = (ts===a||ts===b)?'se':(a&&b&&ts>a&&ts<b)?'rg':'';
+    cells+=`<button class="${cls}" ${t>TODAY?'disabled':''} onclick="pickDay(${ts})">${d}</button>` }
+  const txt = cal.a ? (cal.b ? `${cal.a.getDate()} ${MON[cal.a.getMonth()]} – ${cal.b.getDate()} ${MON[cal.b.getMonth()]}` : `с ${cal.a.getDate()} ${MON[cal.a.getMonth()]} — выберите конец`) : 'Выберите начало периода';
+  $('#sheetIn').innerHTML=`<div class="grab"></div><b style="font-size:18px">📅 Свой период</b><div style="font-size:13px;opacity:.6;margin-top:4px">${txt}</div>
+  <div class="calh"><button onclick="cal.m=new Date(${y},${m-1},1);drawCal()">‹</button><b>${MON[m][0].toUpperCase()+['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][m].slice(1)} ${y}</b><button ${y===TODAY.getFullYear()&&m===TODAY.getMonth()?'disabled style="opacity:.3"':''} onclick="cal.m=new Date(${y},${m+1},1);drawCal()">›</button></div>
+  <div class="cal">${cells.replace(/<i><\/i>/g,'<span></span>')}</div><button class="gbtn" ${cal.a&&cal.b?'':'disabled style="opacity:.4"'} onclick="applyCal()">Применить</button>` }
+function pickDay(ts){ hap(); const t=new Date(ts); if(!cal.a||cal.b){cal.a=t;cal.b=null} else if(t<cal.a){cal.b=cal.a;cal.a=t} else cal.b=t; drawCal() }
+function applyCal(){ custom={a:cal.a,b:cal.b}; closeSheet(); render() }
+
+// ---------- мини-обучение ----------
+const TOURS={
+ home:{t:'Home',p:'Главный экран: всё самое важное о вашем P2P за день',s:[['hello','Здесь ваше имя и аватарка из Telegram'],['today','Прибыль за сегодня, оборот и количество ордеров'],['week','Прибыль за неделю и ваш средний спред'],['check','Проверка чека: пришлите квитанцию, бот найдёт код и поможет проверить'],['chart','Подключите Binance — и бот сам начнёт считать прибыль, а здесь появится график'],['nav','Меню: отсюда переходите во все разделы']]},
+ p2p:{t:'P2P',p:'Ваши ордера Binance: прибыль, оборот и спред',s:[['chips','Выберите период: сегодня, неделя, месяц или свой в календаре'],['profit','Чистая прибыль за период, оборот, ордера и спред'],['rates','Средний курс покупки и продажи USDT'],['bars','Прибыль по дням — лучший день подсвечен розовым'],['orders','Все ордера из Binance с фильтром покупка / продажа'],['check','Проверить чек по любому ордеру']]},
+ fin:{t:'Финансы',p:'Личные доходы и расходы в одном месте',s:[['total','Итог за месяц: сколько пришло и сколько ушло'],['list','Все записи по дням. Прибыль из P2P попадает сюда сама'],['fab','Нажмите «＋», чтобы добавить расход или доход']]},
+ rat:{t:'Рейтинг',p:'Годовой рейтинг пользователей Noir P2P',s:[['season','Сезон длится год и обнуляется 1 января'],['podium','Тройка лидеров сезона — места пока свободны'],['mine','Ваше место и сколько очков до следующего']]},
+ pro:{t:'Профиль',p:'Ваш аккаунт, Binance и настройки',s:[['pcard','Ваше место в рейтинге и серия заходов'],['bin','Подключение Binance — ключ только для чтения'],['set','Настройки: рейтинг, уведомления, стартовый остаток'],['help','Обучение, ИИ-помощник и платная консультация'],['del','Здесь можно удалить все свои данные']]}};
+let T=null;
+function startTour(k){ if(store.get('tour_'+k)) return; const d=TOURS[k]; T={k,i:-1,d}; $('#tour').classList.add('on'); $('#spot').style.display='none'; $('#tip').style.display='none';
+  const ib=$('#intro'); ib.style.display='flex'; ib.innerHTML=`<div class="ic">${svg(k,64)}</div><h2>${d.t}</h2><div class="ln"></div><p>${d.p}</p><button onclick="tourNext()">Начать</button>`; }
+function tourNext(){ hap(); $('#intro').style.display='none'; T.i++; const st=T.d.s;
+  if(T.i>=st.length){ $('#tour').classList.remove('on'); store.set('tour_'+T.k,true); T=null; return }
+  const [sel,txt]=st[T.i]; const el = sel==='nav'?$('.nav .in'):sel==='fab'?$('.fb'):document.querySelector(`[data-t="${sel}"]`);
+  if(!el){ return tourNext() }
+  const fixed = sel==='nav'||sel==='fab'||sel==='mine'; if(!fixed) el.scrollIntoView({block:'center'});
+  setTimeout(()=>{ const r=el.getBoundingClientRect(), pad=6, sp=$('#spot'); sp.style.display='block';
+    Object.assign(sp.style,{left:r.left-pad+'px',top:r.top-pad+'px',width:r.width+pad*2+'px',height:r.height+pad*2+'px',borderRadius:sel==='fab'?'50%':'18px'});
+    const tip=$('#tip'); tip.style.display='block'; $('#ttext').textContent=txt; $('#tnum').textContent=(T.i+1)+' / '+st.length;
+    $('#tnext').textContent = T.i===st.length-1?'Готово':'Далее';
+    const below = r.bottom+170 < innerHeight; tip.style.top = (below ? r.bottom+16 : Math.max(16, r.top-16-tip.offsetHeight))+'px' }, fixed?0:260) }
+$('#tnext').onclick=tourNext;
+$('#tcatch').onclick=()=>{ const t=$('#tip'); t.classList.remove('shake'); void t.offsetWidth; t.classList.add('shake'); $('#hint').classList.add('on'); clearTimeout(T&&T.h); setTimeout(()=>$('#hint').classList.remove('on'),1600); try{tg.HapticFeedback.notificationOccurred('warning')}catch(e){} };
+function resetTours(){ Object.keys(TOURS).forEach(k=>{try{localStorage.removeItem('noir_tour_'+k)}catch(e){}}); go('home',true) }
+function countUp(){ document.querySelectorAll('.cnt').forEach(e=>{ const v=+e.dataset.v, t0=performance.now();
+  const f=t=>{ const k=Math.min(1,(t-t0)/900), e2=1-Math.pow(1-k,3); e.textContent=fmt(v*e2); if(k<1) requestAnimationFrame(f) }; requestAnimationFrame(f) }) }
 
 // ---------- навигация ----------
 let tab = 'home';
 function render(){
   $('#app').innerHTML = `<div class="view">${({home:vHome,p2p:vP2P,fin:vFin,rat:vRat,pro:vPro})[tab]()}</div>`;
+  [...$('.view').children].forEach((c,i)=>c.style.animationDelay=Math.min(i,10)*60+'ms'); countUp();
   $('#nav').innerHTML = TABS.map(([k,l])=>`<button class="ni ${k===tab?'on':''}" onclick="go('${k}')">${svg(k)}<span>${l}</span></button>`).join('');
   document.querySelectorAll('.fabs').forEach(e=>e.remove());
   if (tab==='fin') document.body.insertAdjacentHTML('beforeend','<div class="fabs"><button class="fb" onclick="openSheet()">＋</button></div>');
 }
-function go(k){ if(k===tab) return; tab=k; hap(); window.scrollTo(0,0); render() }
+function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
-render();
+setTimeout(()=>{ $('#splash').classList.add('off'); render(); setTimeout(()=>startTour('home'),600); setTimeout(()=>$('#splash').remove(),600) }, 1700);
 </script>
 </body>
 </html>
