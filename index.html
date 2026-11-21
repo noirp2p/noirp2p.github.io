@@ -157,6 +157,7 @@ function ensure(k){ if(!BN.connected || PEND[k] || (STAT[k] && Date.now()-STAT[k
 const OFFLINE_CARD = () => `<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">📡</div><b style="font-size:17px;display:block;margin-top:6px">Нет связи с ботом</b><div class="lb" style="margin:6px auto 0;max-width:270px">${API?'Бот сейчас не в сети или сменил адрес. Закройте приложение и откройте его кнопкой «Открыть» в чате бота.':'Откройте приложение кнопкой «Открыть» в чате бота.'}</div>${API?'<button class="gbtn" onclick="retryMe()">Повторить</button>':''}</div>`;
 const sgn = v => (v<0?'−':'')+fmt(Math.abs(v));
 const rate = v => v ? v.toFixed(2).replace('.',',') : '—';
+const sprU = c => (c&&c.avg_buy&&c.avg_sell ? (c.avg_sell-c.avg_buy).toFixed(2) : '0').replace('.',',')+' ₴'; // спред в гривнах: ср. продажа − ср. покупка за 1 USDT
 const hhmm = ts => { const d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.getMinutes()) };
 
 const IC = {home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',p2p:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
@@ -219,31 +220,31 @@ function vHome(){
   else chart=`<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="openBinance()">Подключить API Binance</button></div>`;
   return `${topBar()}${hello}${warn}
   <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>
-  <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${String(week.spread||0).replace('.',',')}%</div></div></div>
+  <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${sprU(week)}</div></div></div>
   <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
   ${chart}`;
 }
 let p2pPeriod='Неделя', p2pFilter='Все', custom=null;
 const PER = {
- 'Сегодня':{profit:1240,usdt:30,cmp:'▲ 12% ко вчера',turn:'186 400 ₴',ord:47,spr:'1,4%',buy:'41,08',sell:'41,66',bt:'Прибыль по часам',bl:['8:00','10:00','12:00','14:00','16:00','18:00'],bv:[90,160,240,180,330,240],best:'лучший час — 16:00'},
- 'Неделя':{profit:6930,usdt:166,cmp:'▲ 18% к прошлой неделе',turn:'1,2 млн ₴',ord:312,spr:'1,4%',buy:'41,05',sell:'41,62',bt:'Прибыль по дням',bl:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],bv:DAYS,best:'лучший день — Вс'},
- 'Месяц':{profit:24380,usdt:587,cmp:'▲ 9% к октябрю',turn:'4,9 млн ₴',ord:1284,spr:'1,3%',buy:'40,98',sell:'41,51',bt:'Прибыль по неделям',bl:['1–7','8–14','15–21','22–30'],bv:[5120,6480,5900,6880],best:'лучшая неделя — 22–30'}};
+ 'Сегодня':{profit:1240,usdt:30,cmp:'▲ 12% ко вчера',turn:'186 400 ₴',ord:47,spr:'0,58 ₴',buy:'41,08',sell:'41,66',bt:'Прибыль по часам',bl:['8:00','10:00','12:00','14:00','16:00','18:00'],bv:[90,160,240,180,330,240],best:'лучший час — 16:00'},
+ 'Неделя':{profit:6930,usdt:166,cmp:'▲ 18% к прошлой неделе',turn:'1,2 млн ₴',ord:312,spr:'0,57 ₴',buy:'41,05',sell:'41,62',bt:'Прибыль по дням',bl:['Пн','Вт','Ср','Чт','Пт','Сб','Вс'],bv:DAYS,best:'лучший день — Вс'},
+ 'Месяц':{profit:24380,usdt:587,cmp:'▲ 9% к октябрю',turn:'4,9 млн ₴',ord:1284,spr:'0,53 ₴',buy:'40,98',sell:'41,51',bt:'Прибыль по неделям',bl:['1–7','8–14','15–21','22–30'],bv:[5120,6480,5900,6880],best:'лучшая неделя — 22–30'}};
 const MON=['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
 function customPer(a,b){ const days=Math.round((b-a)/864e5)+1, bv=[], bl=[];
   for(let i=0;i<days;i++){ const d=new Date(+a+i*864e5); bl.push(String(d.getDate())); bv.push(600+((d.getDate()*397)%1100)) }
   let pv=bv, pl=bl; if(days>10){ pv=[];pl=[]; const step=Math.ceil(days/7); for(let i=0;i<days;i+=step){ pv.push(bv.slice(i,i+step).reduce((x,y)=>x+y,0)); pl.push(bl[i]+(step>1?'–'+bl[Math.min(i+step,days)-1]:'')) } }
   const profit=bv.reduce((x,y)=>x+y,0), mx=Math.max(...pv);
-  return {profit,usdt:Math.round(profit/41.6),cmp:days+' дн. · свой период',turn:(profit*172/1e6).toFixed(1).replace('.',',')+' млн ₴',ord:days*45,spr:'1,4%',buy:'41,04',sell:'41,61',bt:'Прибыль за период',bl:pl,bv:pv,best:'лучший — '+pl[pv.indexOf(mx)]} }
+  return {profit,usdt:Math.round(profit/41.6),cmp:days+' дн. · свой период',turn:(profit*172/1e6).toFixed(1).replace('.',',')+' млн ₴',ord:days*45,spr:'0,56 ₴',buy:'41,04',sell:'41,61',bt:'Прибыль за период',bl:pl,bv:pv,best:'лучший — '+pl[pv.indexOf(mx)]} }
 const perLabel = () => !custom ? p2pPeriod.toLowerCase() : custom.a.getMonth()===custom.b.getMonth() ? custom.a.getDate()+'–'+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3) : custom.a.getDate()+' '+MON[custom.a.getMonth()].slice(0,3)+' – '+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3);
 function vP2P(){
   const key = custom ? 'c'+(+custom.a)+'_'+(+custom.b) : p2pPeriod;
-  let D = {profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0%', buy:'—', sell:'—', bt:'Прибыль за период', best:''}, bars='', ords='', loading=false, err='';
+  let D = {profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0 ₴', buy:'—', sell:'—', bt:'Прибыль за период', best:''}, bars='', ords='', loading=false, err='';
   if(BN.connected){ ensure(key); const j=st(key);
     if(STAT[key]&&STAT[key].err) err=STAT[key].err;
     if(j&&j.cur){ const c=j.cur, pv=j.prev.profit, ref={'Сегодня':'ко вчера','Неделя':'к прошлой неделе','Месяц':'к прошлым 30 дням'}[key]||'к прошлому периоду';
       const ch = pv>0 ? Math.round((c.profit-pv)/pv*100) : null;
       D={profit:c.profit, usdt:c.profit/(c.avg_sell||c.avg_buy||41.6), cmp: ch===null?'нет данных для сравнения':(ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% '+ref,
-         turn:fmt(c.turnover)+' ₴', ord:c.orders, spr:String(c.spread).replace('.',',')+'%', buy:rate(c.avg_buy), sell:rate(c.avg_sell), bt:'', best:''};
+         turn:fmt(c.turnover)+' ₴', ord:c.orders, spr:sprU(c), buy:rate(c.avg_buy), sell:rate(c.avg_sell), bt:'', best:''};
       let bv=[], bl=[];
       if(c.step==='hour'){ for(let i=0;i<24;i+=3){ bv.push(c.bars.slice(i,i+3).reduce((x,b)=>x+b[1],0)); bl.push(i+':00') } D.bt='Прибыль по часам' }
       else { const n=c.bars.length;
