@@ -98,6 +98,15 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:8px}.cal span{font-size:12px;opacity:.5;text-align:center;padding:4px 0}
 .cal button{height:40px;border-radius:12px;font-weight:600;font-size:15px}.cal .rg{background:#efe8da;border-radius:0}.cal .se{background:var(--G);color:var(--C)}.cal button:disabled{opacity:.25}
 .calh{display:flex;justify-content:space-between;align-items:center;margin-top:6px}.calh b{font-size:17px}.calh button{width:40px;height:40px;border-radius:12px;background:#fff;border:1px solid var(--L);font-size:18px}
+.view.q>*{animation:none!important}
+.spin{display:inline-block;width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite;vertical-align:-3px;margin-right:8px}@keyframes sp{to{transform:rotate(360deg)}}
+.fld{display:block;width:100%;background:#fff;border:1px solid #e6ddcc;border-radius:14px;padding:13px 14px;font-size:15px;font-family:inherit;margin-top:8px;color:var(--G)}
+.fl2{display:flex;gap:8px}.fl2 .fld{flex:1;min-width:0}
+.steps{margin:10px 0 0;padding:0;list-style:none;counter-reset:s}.steps li{counter-increment:s;display:flex;gap:10px;align-items:flex-start;font-size:14px;padding:5px 0}.steps li:before{content:counter(s);flex:none;width:22px;height:22px;border-radius:50%;background:var(--G);color:var(--C);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.warn{background:#f7e3dd;color:#8c3f2f;border-radius:14px;padding:10px 12px;font-size:13px;margin-top:10px;font-weight:600}
+.tbtn{display:block;width:100%;padding:13px;font-weight:700;opacity:.6;text-align:center}
+.ok2{text-align:center;padding:26px 6px 6px}.ok2 .big2{font-size:56px;animation:pop .6s cubic-bezier(.2,1.4,.4,1)}
+.chartc svg{display:block;width:100%;height:96px;margin-top:10px}
 </style>
 </head>
 <body>
@@ -120,7 +129,34 @@ const fmt = n => (Math.round(n)||0).toLocaleString('ru-RU').replace(/,/g,' ');
 const hap = (t='light') => { try { tg.HapticFeedback.impactOccurred(t) } catch(e){} };
 const store = { get(k,d){ try{ const v=localStorage.getItem('noir_'+k); return v===null?d:JSON.parse(v) }catch(e){ return d } },
                 set(k,v){ try{ localStorage.setItem('noir_'+k, JSON.stringify(v)) }catch(e){} } };
-function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),1800) }
+function toast(t){ const el=$('#toast'); el.textContent=t; el.classList.add('on'); clearTimeout(toast.t); toast.t=setTimeout(()=>el.classList.remove('on'),t.length>40?3200:1800) }
+
+// ---------- связь с ботом (шаг 5: Binance) ----------
+const API = (()=>{ try{ const u=new URLSearchParams(location.search).get('api')||''; return /^(https:\/\/[a-z0-9.-]+|http:\/\/127\.0\.0\.1:\d+)$/i.test(u)?u:'' }catch(e){ return '' } })();
+let BN = {connected:false, loaded:false};
+const STAT = {}, PEND = {};
+async function api(path, body){
+  if(!API) throw new Error('Откройте приложение заново кнопкой «Открыть» в чате бота');
+  let r, j={};
+  try{ r = await fetch(API+path, {method:body?'POST':'GET', headers:Object.assign({'X-Init-Data':(tg&&tg.initData)||''}, body?{'Content-Type':'application/json'}:{}), body:body?JSON.stringify(body):undefined}) }
+  catch(e){ throw new Error('Бот сейчас не на связи. Попробуйте позже или откройте приложение заново.') }
+  try{ j = await r.json() }catch(e){}
+  if(!r.ok || !j.ok) throw new Error(j.error || 'Бот сейчас не на связи. Попробуйте позже.');
+  return j }
+const DAYMS=864e5, dayStart = d => { const x=new Date(d); x.setHours(0,0,0,0); return +x };
+function perRange(k){ const t=dayStart(Date.now());
+  if(k==='Сегодня') return [t, t+DAYMS]; if(k==='Неделя') return [t-6*DAYMS, t+DAYMS]; if(k==='Месяц') return [t-29*DAYMS, t+DAYMS];
+  const [a,b]=k.slice(1).split('_').map(Number); return [a, b+DAYMS] }
+const st = k => STAT[k] && STAT[k].d;
+function ensure(k){ if(!BN.connected || PEND[k] || (STAT[k] && Date.now()-STAT[k].at<60000)) return;
+  PEND[k]=1; const [a,b]=perRange(k);
+  api(`/api/stats?from=${a}&to=${b}&tz=${new Date().getTimezoneOffset()}`).then(j=>{ STAT[k]={d:j,at:Date.now()};
+      Object.assign(BN,{last_sync:j.last_sync,sync_error:j.sync_error,start_usdt:j.start_usdt,start_price:j.start_price}); if(j.connected===false){ BN.connected=false } })
+    .catch(e=>{ STAT[k]={d:null,err:e.message,at:Date.now()} })
+    .finally(()=>{ delete PEND[k]; if(!T) render(true) }) }
+const sgn = v => (v<0?'−':'')+fmt(Math.abs(v));
+const rate = v => v ? v.toFixed(2).replace('.',',') : '—';
+const hhmm = ts => { const d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.getMinutes()) };
 
 const IC = {home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',p2p:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
 fin:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h2M3 10h18"/>',rat:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>',
@@ -132,7 +168,6 @@ const TABS = [['home','Home'],['p2p','P2P'],['fin','Финансы'],['rat','Р�
 const nickName = U.username ? '@'+U.username : (U.first_name || 'Гость');
 const avatar = (s, ring) => `<div class="av" style="width:${s}px;height:${s}px;font-size:${s*.4}px;${ring?'box-shadow:0 0 0 3px '+ring:''}">${U.photo_url?`<img src="${esc(U.photo_url)}" alt="">`:esc((store.get('name')||U.first_name||'N')[0].toUpperCase())}</div>`;
 const DAYS = [620,940,410,1180,860,1240,1670];
-const ORDERS = [['14:02','Продажа',2500,41.65],['13:47','Покупка',5000,41.02],['13:21','Продажа',4100,41.58],['12:58','Продажа',3300,41.70],['12:30','Покупка',10000,41.05],['11:54','Продажа',6200,41.61]];
 const CAT = {p2p:['⇄','P2P','#353535','#F9F5E9'],home:['🛋','Жильё','#CCBAAA'],food:['🍔','Еда','#E8B4A0'],cafe:['☕','Кафе','#F2C6CC'],tr:['🚌','Транспорт','#d8cfc0'],fun:['🎮','Игры','#B9A6C9'],gift:['🎁','Подарки','#D9826F','#F9F5E9'],biz:['💼','Бизнес','#8a8a8a','#F9F5E9'],bud:['💵','Зарплата','#E4DCCD']};
 const EXP_CATS = ['food','home','cafe','tr','fun','gift'], INC_CATS = ['p2p','biz','bud','gift'];
 const CUR={UAH:['₴',1],USD:['$',41.5],EUR:['€',45],USDT:['USDT',41.6]};
@@ -167,14 +202,23 @@ function vHome(){
     ? `<div data-t="hello" style="display:flex;align-items:center;gap:12px;margin-top:10px">${avatar(52)}<div><div style="font-size:13px;opacity:.6">Привет 👋</div><div style="font-size:22px;font-weight:800">${esc(name)}</div><div style="font-size:12px;opacity:.6">${esc(nickName)} · ${ME.pts} очков</div></div><div style="margin-left:auto;font-size:22px">🔔</div></div>`
     : `<div class="card lt" data-t="hello"><b style="font-size:16px">Как вас зовут?</b><div class="lb" style="margin-top:4px">Впишите настоящее имя: так приложение будет к вам обращаться</div>
        <div class="namebox"><input id="nameIn" maxlength="20" placeholder="Например, Станислав" autocomplete="off"><button onclick="saveName()">Сохранить</button></div><div class="err" id="nameErr"></div></div>`;
-  const pts = [8,12,9,15,13,18,16,22,19,24,21,27,25,30], W=320,H=90, mx=Math.max(...pts);
-  const P = pts.map((v,i)=>[i*W/(pts.length-1), H-v/mx*H*.9]);
-  const line = P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-  return `${topBar()}${hello}
-  <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">0 ₴</div><div class="lb">Оборот 0 ₴ · 0 ордеров</div></div>
-  <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">0 ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">0%</div></div></div>
+  let today={profit:0,turnover:0,orders:0}, week={profit:0,spread:0}, chart='', warn='';
+  if(BN.connected){ ['Сегодня','Неделя','Месяц'].forEach(ensure);
+    const a=st('Сегодня'), w=st('Неделя'), m=st('Месяц');
+    if(a&&a.cur) today=a.cur; if(w&&w.cur) week=w.cur;
+    if(BN.sync_error) warn=`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`;
+    if(m&&m.cur){ let acc=0; const pts=m.cur.bars.map(b=>acc+=b[1]), W=320,H=90, lo=Math.min(0,...pts), hi=Math.max(1,...pts);
+      const P=pts.map((v,i)=>[i*W/Math.max(pts.length-1,1), H-(v-lo)/(hi-lo)*H*.9-4]);
+      const line=P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
+      chart=`<div class="card chartc" data-t="chart"><div style="display:flex;justify-content:space-between"><span class="lb">Доход за 30 дней</span><b>${sgn(m.cur.profit)} ₴</b></div>
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${line} L${W} ${H} L0 ${H}Z" fill="rgba(242,198,204,.18)"/><path d="${line}" fill="none" stroke="#F2C6CC" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></div>`;
+    } else chart=`<div class="card" data-t="chart" style="text-align:center"><span class="lb"><span class="spin"></span>Загружаем ордера из Binance…</span></div>`;
+  } else chart=`<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="openBinance()">Подключить API Binance</button></div>`;
+  return `${topBar()}${hello}${warn}
+  <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>
+  <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${String(week.spread||0).replace('.',',')}%</div></div></div>
   <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
-  <div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="toast('Подключение Binance — на шаге 5 🔑')">Подключить API Binance</button></div>`;
+  ${chart}`;
 }
 let p2pPeriod='Неделя', p2pFilter='Все', custom=null;
 const PER = {
@@ -189,19 +233,38 @@ function customPer(a,b){ const days=Math.round((b-a)/864e5)+1, bv=[], bl=[];
   return {profit,usdt:Math.round(profit/41.6),cmp:days+' дн. · свой период',turn:(profit*172/1e6).toFixed(1).replace('.',',')+' млн ₴',ord:days*45,spr:'1,4%',buy:'41,04',sell:'41,61',bt:'Прибыль за период',bl:pl,bv:pv,best:'лучший — '+pl[pv.indexOf(mx)]} }
 const perLabel = () => !custom ? p2pPeriod.toLowerCase() : custom.a.getMonth()===custom.b.getMonth() ? custom.a.getDate()+'–'+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3) : custom.a.getDate()+' '+MON[custom.a.getMonth()].slice(0,3)+' – '+custom.b.getDate()+' '+MON[custom.b.getMonth()].slice(0,3);
 function vP2P(){
-  const D0 = custom ? customPer(custom.a,custom.b) : PER[p2pPeriod];
-  const D = {...D0, profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0%', buy:'—', sell:'—', bv:D0.bv.map(()=>0), best:''}, mx=1;
-  const bars = D.bv.map((b,i)=>`<div class="bc"><div class="bv">${fmt(b)}</div><div class="bar" style="height:${Math.round(b/mx*110)}px;${b===mx?'background:#F2C6CC':''};animation:up .5s ${i*.05}s both"></div><div class="bd">${D.bl[i]}</div></div>`).join('');
-  const ords = ORDERS.filter(o=>p2pFilter==='Все'||(p2pFilter==='Покупка')===(o[1]==='Покупка'))
-    .map(([t,k,a,r])=>`<div class="ord"><div class="oi ${k==='Покупка'?'b':'s'}">${k==='Покупка'?'↓':'↑'}</div><div><div class="ot">${k} · ${fmt(a)} ₴</div><div class="os">${t} · курс ${String(r).replace('.',',')} ₴ · USDT</div></div></div>`).join('');
-  return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">○ Binance не подключён</span></div>
+  const key = custom ? 'c'+(+custom.a)+'_'+(+custom.b) : p2pPeriod;
+  let D = {profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0%', buy:'—', sell:'—', bt:'Прибыль за период', best:''}, bars='', ords='', loading=false, err='';
+  if(BN.connected){ ensure(key); const j=st(key);
+    if(STAT[key]&&STAT[key].err) err=STAT[key].err;
+    if(j&&j.cur){ const c=j.cur, pv=j.prev.profit, ref={'Сегодня':'ко вчера','Неделя':'к прошлой неделе','Месяц':'к прошлым 30 дням'}[key]||'к прошлому периоду';
+      const ch = pv>0 ? Math.round((c.profit-pv)/pv*100) : null;
+      D={profit:c.profit, usdt:c.profit/(c.avg_sell||c.avg_buy||41.6), cmp: ch===null?'нет данных для сравнения':(ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% '+ref,
+         turn:fmt(c.turnover)+' ₴', ord:c.orders, spr:String(c.spread).replace('.',',')+'%', buy:rate(c.avg_buy), sell:rate(c.avg_sell), bt:'', best:''};
+      let bv=[], bl=[];
+      if(c.step==='hour'){ for(let i=0;i<24;i+=3){ bv.push(c.bars.slice(i,i+3).reduce((x,b)=>x+b[1],0)); bl.push(i+':00') } D.bt='Прибыль по часам' }
+      else { const n=c.bars.length;
+        if(n<=10){ c.bars.forEach(b=>{ bv.push(b[1]); bl.push(n<=7?['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][new Date(b[0]).getDay()]:String(new Date(b[0]).getDate())) }); D.bt='Прибыль по дням' }
+        else { const step=Math.ceil(n/7); for(let i=0;i<n;i+=step){ const g=c.bars.slice(i,i+step); bv.push(g.reduce((x,b)=>x+b[1],0)); bl.push(new Date(g[0][0]).getDate()+'–'+new Date(g[g.length-1][0]).getDate()) } D.bt='Прибыль по неделям' } }
+      const mx=Math.max(...bv.map(Math.abs),1), best=bv.indexOf(Math.max(...bv));
+      if(bv.some(v=>v)) D.best='лучший — '+bl[best];
+      bars = bv.some(v=>v) ? `<div class="bars">${bv.map((b,i)=>`<div class="bc"><div class="bv">${b?sgn(b):''}</div><div class="bar" style="height:${Math.max(2,Math.round(Math.abs(b)/mx*110))}px;${i===best&&b>0?'background:#F2C6CC':b<0?'background:#D9826F':''};animation:up .5s ${i*.05}s both"></div><div class="bd">${bl[i]}</div></div>`).join('')}</div>` : '';
+      const today0=dayStart(Date.now());
+      ords = c.list.filter(o=>p2pFilter==='Все'||(p2pFilter==='Покупка')===(o.side==='BUY')).map(o=>{ const b=o.side==='BUY', d=new Date(o.ts);
+        const when = o.ts>=today0 ? hhmm(o.ts) : pad2(d.getDate())+'.'+pad2(d.getMonth()+1)+' '+hhmm(o.ts);
+        return `<div class="ord"><div class="oi ${b?'b':'s'}">${b?'↓':'↑'}</div><div><div class="ot">${b?'Покупка':'Продажа'} · ${fmt(o.total)} ₴</div><div class="os">${when} · курс ${rate(o.price)} ₴ · ${String(o.amount).replace('.',',')} USDT</div></div></div>` }).join('');
+      if(c.list.length>=60) ords+=`<div class="lb" style="text-align:center;padding-top:8px">Показаны последние 60 ордеров</div>`;
+    } else if(!err) loading=true;
+  }
+  const badge = !BN.connected ? '○ Binance не подключён' : BN.last_sync ? '● Binance · обновлено '+hhmm(BN.last_sync*1000) : '● Binance';
+  return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">${badge}</span></div>${err?`<div class="warn">⚠ ${esc(err)}</div>`:''}${BN.sync_error?`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`:''}
   <div class="chips" data-t="chips">${['Сегодня','Неделя','Месяц'].map(c=>`<button class="${!custom&&c===p2pPeriod?'on':''}" onclick="custom=null;p2pPeriod='${c}';render()">${c}</button>`).join('')}<button class="${custom?'on':''}" onclick="openCal()">📅 ${custom?perLabel():'Период'}</button></div>
-  <div class="card" data-t="profit"><div class="lb">Чистая прибыль · ${perLabel()}</div><div class="big">0 ₴</div><div class="lb">≈ ${fmt(D.usdt)} USDT · ${D.cmp}</div>
+  <div class="card" data-t="profit"><div class="lb">Чистая прибыль · ${perLabel()}</div><div class="big">${loading?'<span class="spin"></span>':sgn(D.profit)+' ₴'}</div><div class="lb">≈ ${fmt(D.usdt)} USDT · ${D.cmp}</div>
   <div class="g3"><div><span class="lb">Оборот</span><b>${D.turn}</b></div><div><span class="lb">Ордеров</span><b>${fmt(D.ord)}</b></div><div><span class="lb">Спред</span><b>${D.spr}</b></div></div></div>
   <div class="row" data-t="rates"><div class="card lt"><div class="lb">↓ Купил USDT</div><div class="md">${D.buy} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div><div class="card lt"><div class="lb">↑ Продал USDT</div><div class="md">${D.sell} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div></div>
-  <div class="card" data-t="bars"><div style="display:flex;justify-content:space-between"><span class="lb">${D.bt}</span><span class="lb">${D.best}</span></div><div class="bars" style="height:auto;min-height:60px;align-items:center;justify-content:center"><span class="lb">Здесь появится прибыль, когда подключите Binance</span></div></div>
+  <div class="card" data-t="bars"><div style="display:flex;justify-content:space-between"><span class="lb">${D.bt}</span><span class="lb">${D.best}</span></div>${bars||`<div class="bars" style="height:auto;min-height:60px;align-items:center;justify-content:center"><span class="lb">${BN.connected?(loading?'Загружаем…':'За этот период продаж нет'):'Здесь появится прибыль, когда подключите Binance'}</span></div>`}</div>
   <div class="sh" data-t="orders"><b>Ордера</b><div class="seg">${['Все','Покупка','Продажа'].map(c=>`<button class="${c===p2pFilter?'on':''}" onclick="p2pFilter='${c}';render()">${c}</button>`).join('')}</div></div>
-  <div class="card lt" style="text-align:center;padding:22px 16px"><span class="lb">Пока нет ордеров — они подтянутся из Binance автоматически</span></div>
+  ${ords?`<div class="card lt" style="padding:4px 14px">${ords}</div>`:`<div class="card lt" style="text-align:center;padding:22px 16px"><span class="lb">${BN.connected?(loading?'Загружаем ордера…':'За этот период ордеров нет'):'Пока нет ордеров — они подтянутся из Binance автоматически'}</span></div>`}
   <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек по ордеру</button>`;
 }
 function vFin(){
@@ -229,11 +292,12 @@ function vPro(){
   return `${topBar()}<h1 class="ttl">Профиль</h1>
   <div class="card" data-t="pcard" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
   <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${ME.streak===1?'день':'дней'}</span></div></div></div>
-  <div class="gt">Binance</div><div class="grp" data-t="bin"><button class="it" onclick="toast('Подключение Binance — на шаге 5 🔑')"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button></div>
+  <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button>`
+     :`<button class="it" onclick="openBinance()"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button>`}</div>
   <div class="gt">Настройки</div><div class="grp" data-t="set">
    <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><b>Показывать меня в рейтинге</b>${sw('showRating',true)}</button>
    <button class="it" onclick="tog('notif',true)"><span class="ie">🔔</span><b>Уведомления</b>${sw('notif',true)}</button>
-   <button class="it" onclick="toast('Стартовый остаток — на шаге 5')"><span class="ie">💵</span><span><b>Стартовый остаток USDT</b><small>не указан</small></span><span class="ir">›</span></button></div>
+   <button class="it" onclick="openStart()"><span class="ie">💵</span><span><b>Стартовый остаток USDT</b><small>${BN.start_usdt>0?fmt(BN.start_usdt)+' USDT по '+rate(BN.start_price)+' ₴':'не указан'}</small></span><span class="ir">›</span></button></div>
   <div class="gt">Помощь</div><div class="grp" data-t="help">
    <button class="it" onclick="resetTours()"><span class="ie">🎓</span><b>Пройти обучение заново</b><span class="ir">›</span></button>
    <button class="it" onclick="exitApp()"><span class="ie">🤖</span><span><b>ИИ-помощник</b><small>задать вопрос в чате бота</small></span><span class="ir">›</span></button>
@@ -291,10 +355,42 @@ function delTx(){ const go=()=>{ TX=TX.filter(t=>t.id!==sh.id); store.set('tx2',
 function saveName(){ const v=$('#nameIn').value, e=checkName(v); if(e){ $('#nameErr').textContent=e; try{tg.HapticFeedback.notificationOccurred('error')}catch(_){}; return }
   const n=v.trim(); store.set('name', n[0].toUpperCase()+n.slice(1).toLowerCase()); hap('medium'); render(); toast('Приятно познакомиться 👋') }
 function tog(k,d){ store.set(k,!store.get(k,d)); hap(); render() }
-function delData(){ const go=()=>{ ['name','tx2','showRating','notif'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
+function delData(){ const go=async()=>{ if(API){ try{ await api('/api/delete',{}) }catch(e){ toast(e.message); return } }
+    ['name','tx2','showRating','notif'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
   if (tg && tg.showConfirm) tg.showConfirm('Удалить все ваши данные из Noir P2P?', ok=>ok&&go()); else go() }
 function openLink(u){ if(tg&&tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u) }
 function exitApp(){ if(tg) tg.close(); }
+
+// ---------- подключение Binance ----------
+let bnBusy=false;
+const BN_FORM = () => `<div class="grab"></div><b style="font-size:19px">🔑 Подключение Binance</b>
+  <ol class="steps"><li><span>Binance → Профиль → <b>Управление API</b></span></li><li><span><b>Создать API</b> → «Сгенерированный системой», название Noir P2P</span></li><li><span>В правах оставьте только <b>«Разрешить чтение»</b></span></li><li><span>Скопируйте API Key и Secret Key сюда</span></li></ol>
+  <div class="warn">⚠ Не включайте торговлю и вывод. Бот примет только ключ «только чтение», и хранит его зашифрованным.</div>
+  <input class="fld" id="bnK" type="password" placeholder="API Key" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <input class="fld" id="bnS" type="password" placeholder="Secret Key" autocomplete="off" autocapitalize="off" spellcheck="false">
+  <div class="lb" style="color:#8a7f72;margin:12px 2px 0">Стартовый остаток (необязательно): сколько USDT у вас уже было и по какой цене. Так прибыль с первых продаж посчитается точно.</div>
+  <div class="fl2"><input class="fld" id="bnU" inputmode="decimal" placeholder="USDT, напр. 500"><input class="fld" id="bnP" inputmode="decimal" placeholder="₴ за 1 USDT"></div>
+  <div class="err" id="bnE"></div>
+  <button class="gbtn" id="bnGo" onclick="connectBn()">Подключить</button><button class="tbtn" onclick="closeSheet()">Позже</button>`;
+function openBinance(){ if(!API){ toast('Откройте приложение заново кнопкой «Открыть» в чате бота'); return }
+  $('#sheetIn').innerHTML=BN_FORM(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
+async function connectBn(){ if(bnBusy) return; const v=id=>$('#'+id).value.trim();
+  const body={key:v('bnK'), secret:v('bnS'), start_usdt:v('bnU')||0, start_price:v('bnP')||0};
+  if(!body.key||!body.secret){ $('#bnE').textContent='Вставьте API Key и Secret Key.'; return }
+  bnBusy=true; $('#bnE').textContent=''; $('#bnGo').innerHTML='<span class="spin"></span>Проверяем ключ…';
+  try{ const j=await api('/api/connect', body); Object.assign(BN,j,{loaded:true}); Object.keys(STAT).forEach(k=>delete STAT[k]);
+    try{tg.HapticFeedback.notificationOccurred('success')}catch(e){}
+    $('#sheetIn').innerHTML=`<div class="grab"></div><div class="ok2"><div class="big2">✅</div><b style="font-size:20px;display:block;margin-top:8px">Binance подключён</b><div class="lb" style="color:#8a7f72;margin-top:6px">только чтение · зашифрован</div>${j.sync_error?`<div class="warn">⚠ ${esc(j.sync_error)}</div>`:''}<button class="gbtn" style="margin-top:20px" onclick="closeSheet();render()">Готово</button></div>`;
+  }catch(e){ $('#bnE').textContent=e.message; $('#bnGo').textContent='Подключить'; try{tg.HapticFeedback.notificationOccurred('error')}catch(_){} }
+  bnBusy=false }
+function discBn(){ const go=async()=>{ try{ await api('/api/disconnect',{}); BN.connected=false; Object.keys(STAT).forEach(k=>delete STAT[k]); render(); toast('Binance отключён, ключ удалён') }catch(e){ toast(e.message) } };
+  if(tg&&tg.showConfirm) tg.showConfirm('Отключить Binance? Ключ и загруженные ордера будут удалены.',ok=>ok&&go()); else go() }
+function openStart(){ if(!API){ toast('Откройте приложение заново кнопкой «Открыть» в чате бота'); return }
+  $('#sheetIn').innerHTML=`<div class="grab"></div><b style="font-size:19px">💵 Стартовый остаток USDT</b><div class="lb" style="color:#8a7f72;margin-top:6px">Сколько USDT у вас было до подключения и по какой средней цене вы их купили. От этого считается прибыль с первых продаж.</div>
+  <div class="fl2"><input class="fld" id="stU" inputmode="decimal" placeholder="USDT" value="${BN.start_usdt||''}"><input class="fld" id="stP" inputmode="decimal" placeholder="₴ за 1 USDT" value="${BN.start_price||''}"></div><div class="err" id="stE"></div>
+  <button class="gbtn" onclick="saveStart()">Сохранить</button>`; $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
+async function saveStart(){ try{ const j=await api('/api/start',{start_usdt:$('#stU').value.trim()||0,start_price:$('#stP').value.trim()||0});
+  Object.assign(BN,j); Object.keys(STAT).forEach(k=>delete STAT[k]); closeSheet(); render(); toast('Сохранено ✓') }catch(e){ $('#stE').textContent=e.message } }
 
 // ---------- календарь периода ----------
 let cal={m:null,a:null,b:null}; const TODAY=new Date(); TODAY.setHours(0,0,0,0);
@@ -322,7 +418,7 @@ let T=null;
 function startTour(k){ if(store.get('tour_'+k)) return; const d=TOURS[k]; T={k,i:-1,d}; $('#tour').classList.add('on'); $('#spot').style.display='none'; $('#tip').style.display='none';
   const ib=$('#intro'); ib.style.display='flex'; ib.innerHTML=`<div class="ic">${svg(k,64)}</div><h2>${d.t}</h2><div class="ln"></div><p>${d.p}</p><button onclick="tourNext()">Начать</button>`; }
 function tourNext(){ hap(); $('#intro').style.display='none'; T.i++; const st=T.d.s;
-  if(T.i>=st.length){ $('#tour').classList.remove('on'); store.set('tour_'+T.k,true); T=null; return }
+  if(T.i>=st.length){ $('#tour').classList.remove('on'); store.set('tour_'+T.k,true); T=null; render(true); return }
   const [sel,txt]=st[T.i]; const el = sel==='nav'?$('.nav .in'):sel==='fab'?$('.fb'):document.querySelector(`[data-t="${sel}"]`);
   if(!el){ return tourNext() }
   const fixed = sel==='nav'||sel==='fab'||sel==='mine'; if(!fixed) el.scrollIntoView({block:'center'});
@@ -339,15 +435,16 @@ function countUp(){ document.querySelectorAll('.cnt').forEach(e=>{ const v=+e.da
 
 // ---------- навигация ----------
 let tab = 'home';
-function render(){
-  $('#app').innerHTML = `<div class="view">${({home:vHome,p2p:vP2P,fin:vFin,rat:vRat,pro:vPro})[tab]()}</div>`;
-  [...$('.view').children].forEach((c,i)=>c.style.animationDelay=Math.min(i,10)*60+'ms'); countUp();
+function render(quiet){
+  $('#app').innerHTML = `<div class="view${quiet===true?' q':''}">${({home:vHome,p2p:vP2P,fin:vFin,rat:vRat,pro:vPro})[tab]()}</div>`;
+  [...$('.view').children].forEach((c,i)=>c.style.animationDelay=Math.min(i,10)*60+'ms'); if(quiet!==true) countUp();
   $('#nav').innerHTML = TABS.map(([k,l])=>`<button class="ni ${k===tab?'on':''}" onclick="go('${k}')">${svg(k)}<span>${l}</span></button>`).join('');
   document.querySelectorAll('.fabs').forEach(e=>e.remove());
   if (tab==='fin') document.body.insertAdjacentHTML('beforeend','<div class="fabs"><button class="fb" onclick="openSheet()">＋</button></div>');
 }
 function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
+if(API) api('/api/me').then(j=>{ Object.assign(BN,j,{loaded:true}); if(!$('#splash')&&!T) render(true) }).catch(()=>{});
 setTimeout(()=>{ $('#splash').classList.add('off'); render(); setTimeout(()=>startTour('home'),600); setTimeout(()=>$('#splash').remove(),600) }, 1700);
 </script>
 </body>
