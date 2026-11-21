@@ -154,6 +154,7 @@ function ensure(k){ if(!BN.connected || PEND[k] || (STAT[k] && Date.now()-STAT[k
       Object.assign(BN,{last_sync:j.last_sync,sync_error:j.sync_error,start_usdt:j.start_usdt,start_price:j.start_price}); if(j.connected===false){ BN.connected=false } })
     .catch(e=>{ STAT[k]={d:null,err:e.message,at:Date.now()} })
     .finally(()=>{ delete PEND[k]; if(!T) render(true) }) }
+const OFFLINE_CARD = () => `<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">📡</div><b style="font-size:17px;display:block;margin-top:6px">Нет связи с ботом</b><div class="lb" style="margin:6px auto 0;max-width:270px">${API?'Бот сейчас не в сети или сменил адрес. Закройте приложение и откройте его кнопкой «Открыть» в чате бота.':'Откройте приложение кнопкой «Открыть» в чате бота.'}</div>${API?'<button class="gbtn" onclick="retryMe()">Повторить</button>':''}</div>`;
 const sgn = v => (v<0?'−':'')+fmt(Math.abs(v));
 const rate = v => v ? v.toFixed(2).replace('.',',') : '—';
 const hhmm = ts => { const d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.getMinutes()) };
@@ -213,7 +214,9 @@ function vHome(){
       chart=`<div class="card chartc" data-t="chart"><div style="display:flex;justify-content:space-between"><span class="lb">Доход за 30 дней</span><b>${sgn(m.cur.profit)} ₴</b></div>
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${line} L${W} ${H} L0 ${H}Z" fill="rgba(242,198,204,.18)"/><path d="${line}" fill="none" stroke="#F2C6CC" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></div>`;
     } else chart=`<div class="card" data-t="chart" style="text-align:center"><span class="lb"><span class="spin"></span>Загружаем ордера из Binance…</span></div>`;
-  } else chart=`<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="openBinance()">Подключить API Binance</button></div>`;
+  } else if(BN.offline) chart=OFFLINE_CARD();
+  else if(!BN.loaded) chart=`<div class="card lt" data-t="chart" style="text-align:center"><span class="lb"><span class="spin"></span>Связываемся с ботом…</span></div>`;
+  else chart=`<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="openBinance()">Подключить API Binance</button></div>`;
   return `${topBar()}${hello}${warn}
   <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>
   <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${String(week.spread||0).replace('.',',')}%</div></div></div>
@@ -256,7 +259,7 @@ function vP2P(){
       if(c.list.length>=60) ords+=`<div class="lb" style="text-align:center;padding-top:8px">Показаны последние 60 ордеров</div>`;
     } else if(!err) loading=true;
   }
-  const badge = !BN.connected ? '○ Binance не подключён' : BN.last_sync ? '● Binance · обновлено '+hhmm(BN.last_sync*1000) : '● Binance';
+  const badge = BN.offline ? '○ нет связи с ботом' : !BN.loaded ? '… связь с ботом' : !BN.connected ? '○ Binance не подключён' : BN.last_sync ? '● Binance · обновлено '+hhmm(BN.last_sync*1000) : '● Binance';
   return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">${badge}</span></div>${err?`<div class="warn">⚠ ${esc(err)}</div>`:''}${BN.sync_error?`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`:''}
   <div class="chips" data-t="chips">${['Сегодня','Неделя','Месяц'].map(c=>`<button class="${!custom&&c===p2pPeriod?'on':''}" onclick="custom=null;p2pPeriod='${c}';render()">${c}</button>`).join('')}<button class="${custom?'on':''}" onclick="openCal()">📅 ${custom?perLabel():'Период'}</button></div>
   <div class="card" data-t="profit"><div class="lb">Чистая прибыль · ${perLabel()}</div><div class="big">${loading?'<span class="spin"></span>':sgn(D.profit)+' ₴'}</div><div class="lb">≈ ${fmt(D.usdt)} USDT · ${D.cmp}</div>
@@ -292,7 +295,7 @@ function vPro(){
   return `${topBar()}<h1 class="ttl">Профиль</h1>
   <div class="card" data-t="pcard" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
   <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${ME.streak===1?'день':'дней'}</span></div></div></div>
-  <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button>`
+  <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.offline?`<button class="it" onclick="retryMe()"><span class="ie">📡</span><span><b>Нет связи с ботом</b><small>нажмите, чтобы повторить</small></span><span class="ir">›</span></button>`:BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button>`
      :`<button class="it" onclick="openBinance()"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button>`}</div>
   <div class="gt">Настройки</div><div class="grp" data-t="set">
    <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><b>Показывать меня в рейтинге</b>${sw('showRating',true)}</button>
@@ -372,7 +375,7 @@ const BN_FORM = () => `<div class="grab"></div><b style="font-size:19px">🔑 П
   <div class="fl2"><input class="fld" id="bnU" inputmode="decimal" placeholder="USDT, напр. 500"><input class="fld" id="bnP" inputmode="decimal" placeholder="₴ за 1 USDT"></div>
   <div class="err" id="bnE"></div>
   <button class="gbtn" id="bnGo" onclick="connectBn()">Подключить</button><button class="tbtn" onclick="closeSheet()">Позже</button>`;
-function openBinance(){ if(!API){ toast('Откройте приложение заново кнопкой «Открыть» в чате бота'); return }
+function openBinance(){ if(BN.offline||!API){ toast('Откройте приложение заново кнопкой «Открыть» в чате бота'); return }
   $('#sheetIn').innerHTML=BN_FORM(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
 async function connectBn(){ if(bnBusy) return; const v=id=>$('#'+id).value.trim();
   const body={key:v('bnK'), secret:v('bnS'), start_usdt:v('bnU')||0, start_price:v('bnP')||0};
@@ -444,7 +447,11 @@ function render(quiet){
 }
 function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
-if(API) api('/api/me').then(j=>{ Object.assign(BN,j,{loaded:true}); if(!$('#splash')&&!T) render(true) }).catch(()=>{});
+function loadMe(){ if(!API){ BN.offline=true; return }
+  api('/api/me').then(j=>{ Object.assign(BN,j,{loaded:true,offline:false}) }).catch(()=>{ BN.offline=true })
+    .finally(()=>{ if(!$('#splash')&&!T) render(true) }) }
+function retryMe(){ hap(); BN.offline=false; render(true); loadMe() }
+loadMe();
 setTimeout(()=>{ $('#splash').classList.add('off'); render(); setTimeout(()=>startTour('home'),600); setTimeout(()=>$('#splash').remove(),600) }, 1700);
 </script>
 </body>
