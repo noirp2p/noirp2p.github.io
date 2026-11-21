@@ -26,7 +26,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .gbtn{display:block;width:100%;background:var(--G);color:var(--C);border-radius:18px;padding:15px;font-weight:800;font-size:16px;margin-top:10px;text-align:center}
 .av{border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--G);flex:none;background:var(--P);overflow:hidden}
 .av img{width:100%;height:100%;object-fit:cover}
-.chips{display:flex;gap:6px;margin-top:12px;overflow-x:auto}.chips button{font-size:13px;padding:8px 13px;border-radius:12px;border:1px solid #ddd3c2;white-space:nowrap}.chips .on{background:var(--G);color:var(--C);border-color:var(--G)}
+.chips{display:flex;gap:6px;margin-top:12px;overflow-x:auto}.chips button{font-size:13px;padding:8px 13px;border-radius:12px;border:1px solid #ddd3c2;white-space:nowrap}.chips .on{background:var(--G);color:var(--C);border-color:var(--G)}.chips .xr{display:inline-block;margin:-8px -11px -8px 5px;padding:8px 10px 8px 8px;border-left:1px solid rgba(255,255,255,.25);font-weight:800}
 .g3{display:flex;margin-top:12px;border-top:1px solid #4a4a4a;padding-top:12px}.g3>div{flex:1}.g3 b{display:block;font-size:17px;margin-top:3px}
 .bars{display:flex;justify-content:space-between;align-items:flex-end;height:150px;margin-top:10px}.bc{display:flex;flex-direction:column;align-items:center;flex:1}
 .bar{width:60%;max-width:26px;border-radius:7px 7px 3px 3px;background:var(--C)}.bv,.bd{font-size:10px;color:var(--B)}.bv{margin-bottom:4px}.bd{margin-top:6px;font-size:11px}
@@ -138,7 +138,7 @@ const STAT = {}, PEND = {};
 async function api(path, body){
   if(!API) throw new Error('Откройте приложение заново кнопкой «Открыть» в чате бота');
   let r, j={};
-  try{ r = await fetch(API+path, {method:body?'POST':'GET', headers:Object.assign({'X-Init-Data':(tg&&tg.initData)||''}, body?{'Content-Type':'application/json'}:{}), body:body?JSON.stringify(body):undefined}) }
+  try{ r = await fetch(API+path, {method:body?'POST':'GET', headers:Object.assign({'X-Init-Data':(tg&&tg.initData)||''}, /\.ngrok(-free)?\.(app|dev)$/.test(new URL(API).hostname)?{'ngrok-skip-browser-warning':'1'}:{}, body?{'Content-Type':'application/json'}:{}), body:body?JSON.stringify(body):undefined}) }
   catch(e){ throw new Error('Бот сейчас не на связи. Попробуйте позже или откройте приложение заново.') }
   try{ j = await r.json() }catch(e){}
   if(!r.ok || !j.ok) throw new Error(j.error || 'Бот сейчас не на связи. Попробуйте позже.');
@@ -261,7 +261,7 @@ function vP2P(){
   }
   const badge = BN.offline ? '○ нет связи с ботом' : !BN.loaded ? '… связь с ботом' : !BN.connected ? '○ Binance не подключён' : BN.last_sync ? '● Binance · обновлено '+hhmm(BN.last_sync*1000) : '● Binance';
   return `${topBar()}<div style="display:flex;justify-content:space-between;align-items:flex-end"><h1 class="ttl" style="font-size:38px;margin-bottom:0">P2P</h1><span style="font-size:12px;background:#fff;border:1px solid #e6ddcc;border-radius:10px;padding:5px 9px;margin-bottom:6px">${badge}</span></div>${err?`<div class="warn">⚠ ${esc(err)}</div>`:''}${BN.sync_error?`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`:''}
-  <div class="chips" data-t="chips">${['Сегодня','Неделя','Месяц'].map(c=>`<button class="${!custom&&c===p2pPeriod?'on':''}" onclick="custom=null;p2pPeriod='${c}';render()">${c}</button>`).join('')}<button class="${custom?'on':''}" onclick="openCal()">📅 ${custom?perLabel():'Период'}</button></div>
+  <div class="chips" data-t="chips">${['Сегодня','Неделя','Месяц'].map(c=>`<button class="${!custom&&c===p2pPeriod?'on':''}" onclick="custom=null;p2pPeriod='${c}';render()">${c}</button>`).join('')}<button class="${custom?'on':''}" onclick="openCal()">${custom?perLabel()+`<span class="xr" role="button" aria-label="Сбросить период" onclick="event.stopPropagation();resetPer()">✕</span>`:'📅 Период'}</button></div>
   <div class="card" data-t="profit"><div class="lb">Чистая прибыль · ${perLabel()}</div><div class="big">${loading?'<span class="spin"></span>':sgn(D.profit)+' ₴'}</div><div class="lb">≈ ${fmt(D.usdt)} USDT · ${D.cmp}</div>
   <div class="g3"><div><span class="lb">Оборот</span><b>${D.turn}</b></div><div><span class="lb">Ордеров</span><b>${fmt(D.ord)}</b></div><div><span class="lb">Спред</span><b>${D.spr}</b></div></div></div>
   <div class="row" data-t="rates"><div class="card lt"><div class="lb">↓ Купил USDT</div><div class="md">${D.buy} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div><div class="card lt"><div class="lb">↑ Продал USDT</div><div class="md">${D.sell} ₴</div><div class="lb" style="font-size:12px">средний курс</div></div></div>
@@ -406,9 +406,10 @@ function drawCal(){ const y=cal.m.getFullYear(), m=cal.m.getMonth(), first=(new 
   const txt = cal.a ? (cal.b ? `${cal.a.getDate()} ${MON[cal.a.getMonth()]} – ${cal.b.getDate()} ${MON[cal.b.getMonth()]}` : `с ${cal.a.getDate()} ${MON[cal.a.getMonth()]} — выберите конец`) : 'Выберите начало периода';
   $('#sheetIn').innerHTML=`<div class="grab"></div><b style="font-size:18px">📅 Свой период</b><div style="font-size:13px;opacity:.6;margin-top:4px">${txt}</div>
   <div class="calh"><button onclick="cal.m=new Date(${y},${m-1},1);drawCal()">‹</button><b>${MON[m][0].toUpperCase()+['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'][m].slice(1)} ${y}</b><button ${y===TODAY.getFullYear()&&m===TODAY.getMonth()?'disabled style="opacity:.3"':''} onclick="cal.m=new Date(${y},${m+1},1);drawCal()">›</button></div>
-  <div class="cal">${cells.replace(/<i><\/i>/g,'<span></span>')}</div><button class="gbtn" ${cal.a&&cal.b?'':'disabled style="opacity:.4"'} onclick="applyCal()">Применить</button>` }
+  <div class="cal">${cells.replace(/<i><\/i>/g,'<span></span>')}</div><button class="gbtn" ${cal.a&&cal.b?'':'disabled style="opacity:.4"'} onclick="applyCal()">Применить</button>${cal.a||custom?`<button style="display:block;width:100%;padding:13px;margin-top:6px;font-weight:700;font-size:15px;opacity:.65" onclick="resetPer()">Сбросить период</button>`:''}` }
 function pickDay(ts){ hap(); const t=new Date(ts); if(!cal.a||cal.b){cal.a=t;cal.b=null} else if(t<cal.a){cal.b=cal.a;cal.a=t} else cal.b=t; drawCal() }
 function applyCal(){ custom={a:cal.a,b:cal.b}; closeSheet(); render() }
+function resetPer(){ hap(); custom=null; p2pPeriod='Неделя'; if($('#sheet').classList.contains('on')) closeSheet(); render() }
 
 // ---------- мини-обучение ----------
 const TOURS={
@@ -444,6 +445,7 @@ function render(quiet){
   $('#nav').innerHTML = TABS.map(([k,l])=>`<button class="ni ${k===tab?'on':''}" onclick="go('${k}')">${svg(k)}<span>${l}</span></button>`).join('');
   document.querySelectorAll('.fabs').forEach(e=>e.remove());
   if (tab==='fin') document.body.insertAdjacentHTML('beforeend','<div class="fabs"><button class="fb" onclick="openSheet()">＋</button></div>');
+  if (tab==='p2p' && custom){ const c=$('.chips'); if(c) c.scrollLeft=c.scrollWidth }
 }
 function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
