@@ -218,7 +218,7 @@ function vHome(){
     const a=st('Сегодня'), w=st('Неделя'), m=st('Месяц');
     if(a&&a.cur) today=a.cur; if(w&&w.cur) week=w.cur;
     const base=(BN.start_uah||0)+(BN.start_usdt||0)*(BN.start_price||0);
-    if(a&&a.cur&&base>0) budget=`<div class="card lt" data-t="budget"><div class="lb">Бюджет${BN.profit_from?' · с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):''}</div><div class="md">${fmt(Math.round(base+(a.total_profit||0)))} ₴</div><div class="lb">было ${fmt(Math.round(base))} ₴ · заработано ${sgn(a.total_profit||0)} ₴</div></div>`;
+    if(a&&a.cur&&base>0) budget=`<div class="card lt" data-t="budget"><div class="lb">Бюджет сейчас</div><div class="md">${fmt(Math.round(base+(a.total_profit||0)))} ₴</div><div class="lb">${BN.profit_from?'с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+hhmm(BN.profit_from)+' ':''}было ${fmt(Math.round(base))} ₴ · заработано ${sgn(a.total_profit||0)} ₴</div></div>`;
     if(BN.sync_error) warn=`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`;
     if(m&&m.cur){ let acc=0; const pts=m.cur.bars.map(b=>acc+=b[1]), W=320,H=90, lo=Math.min(0,...pts), hi=Math.max(1,...pts);
       const P=pts.map((v,i)=>[i*W/Math.max(pts.length-1,1), H-(v-lo)/(hi-lo)*H*.9-4]);
