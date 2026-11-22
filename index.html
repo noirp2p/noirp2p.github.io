@@ -204,10 +204,12 @@ function vHome(){
     ? `<div data-t="hello" style="display:flex;align-items:center;gap:12px;margin-top:10px">${avatar(52)}<div><div style="font-size:13px;opacity:.6">Привет 👋</div><div style="font-size:22px;font-weight:800">${esc(name)}</div><div style="font-size:12px;opacity:.6">${esc(nickName)} · ${ME.pts} очков</div></div><div style="margin-left:auto;font-size:22px">🔔</div></div>`
     : `<div class="card lt" data-t="hello"><b style="font-size:16px">Как вас зовут?</b><div class="lb" style="margin-top:4px">Впишите настоящее имя: так приложение будет к вам обращаться</div>
        <div class="namebox"><input id="nameIn" maxlength="20" placeholder="Например, Станислав" autocomplete="off"><button onclick="saveName()">Сохранить</button></div><div class="err" id="nameErr"></div></div>`;
-  let today={profit:0,turnover:0,orders:0}, week={profit:0,spread:0}, chart='', warn='';
+  let today={profit:0,turnover:0,orders:0}, week={profit:0,spread:0}, chart='', warn='', budget='';
   if(BN.connected){ ['Сегодня','Неделя','Месяц'].forEach(ensure);
     const a=st('Сегодня'), w=st('Неделя'), m=st('Месяц');
     if(a&&a.cur) today=a.cur; if(w&&w.cur) week=w.cur;
+    const base=(BN.start_uah||0)+(BN.start_usdt||0)*(BN.start_price||0);
+    if(a&&a.cur&&base>0) budget=`<div class="card lt" data-t="budget"><div class="lb">Бюджет${BN.profit_from?' · с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):''}</div><div class="md">${fmt(Math.round(base+(a.total_profit||0)))} ₴</div><div class="lb">было ${fmt(Math.round(base))} ₴ · заработано ${sgn(a.total_profit||0)} ₴</div></div>`;
     if(BN.sync_error) warn=`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`;
     if(m&&m.cur){ let acc=0; const pts=m.cur.bars.map(b=>acc+=b[1]), W=320,H=90, lo=Math.min(0,...pts), hi=Math.max(1,...pts);
       const P=pts.map((v,i)=>[i*W/Math.max(pts.length-1,1), H-(v-lo)/(hi-lo)*H*.9-4]);
@@ -219,7 +221,7 @@ function vHome(){
   else if(!BN.loaded) chart=`<div class="card lt" data-t="chart" style="text-align:center"><span class="lb"><span class="spin"></span>Связываемся с ботом…</span></div>`;
   else chart=`<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">🔑</div><b style="font-size:17px;display:block;margin-top:6px">Подключите Binance</b><div class="lb" style="margin:6px auto 0;max-width:260px">Ключ только для чтения — бот сам посчитает прибыль, а здесь появится график доходов</div><button class="gbtn" onclick="openBinance()">Подключить API Binance</button></div>`;
   return `${topBar()}${hello}${warn}
-  <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>
+  <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>${budget}
   <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${sprU(week)}</div></div></div>
   <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
   ${chart}`;
@@ -296,12 +298,12 @@ function vPro(){
   return `${topBar()}<h1 class="ttl">Профиль</h1>
   <div class="card" data-t="pcard" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
   <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${ME.streak===1?'день':'дней'}</span></div></div></div>
-  <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.offline?`<button class="it" onclick="retryMe()"><span class="ie">📡</span><span><b>Нет связи с ботом</b><small>нажмите, чтобы повторить</small></span><span class="ir">›</span></button>`:BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button><button class="it" onclick="resync()"><span class="ie">🔄</span><span><b>Пересчитать заново</b><small>скачать все ордера из Binance ещё раз</small></span><span class="ir">›</span></button>`
+  <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.offline?`<button class="it" onclick="retryMe()"><span class="ie">📡</span><span><b>Нет связи с ботом</b><small>нажмите, чтобы повторить</small></span><span class="ir">›</span></button>`:BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button><button class="it" onclick="resync()"><span class="ie">🔄</span><span><b>Пересчитать заново</b><small>история с ${BN.track_from?new Date(BN.track_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+hhmm(BN.track_from):'начала'} · загрузить заново</small></span><span class="ir">›</span></button>`
      :`<button class="it" onclick="openBinance()"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button>`}</div>
   <div class="gt">Настройки</div><div class="grp" data-t="set">
    <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><b>Показывать меня в рейтинге</b>${sw('showRating',true)}</button>
    <button class="it" onclick="tog('notif',true)"><span class="ie">🔔</span><b>Уведомления</b>${sw('notif',true)}</button>
-   <button class="it" onclick="openStart()"><span class="ie">💵</span><span><b>Стартовый остаток USDT</b><small>${BN.start_usdt>0?fmt(BN.start_usdt)+' USDT по '+rate(BN.start_price)+' ₴':'не указан'}</small></span><span class="ir">›</span></button></div>
+   <button class="it" onclick="openStart()"><span class="ie">💵</span><span><b>Мой остаток (USDT и ₴)</b><small>${BN.start_usdt>0?fmt(BN.start_usdt)+' USDT по '+rate(BN.start_price)+' ₴':'не указан'}</small></span><span class="ir">›</span></button></div>
   <div class="gt">Помощь</div><div class="grp" data-t="help">
    <button class="it" onclick="resetTours()"><span class="ie">🎓</span><b>Пройти обучение заново</b><span class="ir">›</span></button>
    <button class="it" onclick="exitApp()"><span class="ie">🤖</span><span><b>ИИ-помощник</b><small>задать вопрос в чате бота</small></span><span class="ir">›</span></button>
@@ -372,7 +374,7 @@ const BN_FORM = () => `<div class="grab"></div><b style="font-size:19px">🔑 П
   <div class="warn">⚠ Не включайте торговлю и вывод. Бот примет только ключ «только чтение», и хранит его зашифрованным.</div>
   <input class="fld" id="bnK" type="password" placeholder="API Key" autocomplete="off" autocapitalize="off" spellcheck="false">
   <input class="fld" id="bnS" type="password" placeholder="Secret Key" autocomplete="off" autocapitalize="off" spellcheck="false">
-  <div class="lb" style="color:#8a7f72;margin:12px 2px 0">Стартовый остаток (необязательно): сколько USDT у вас уже было и по какой цене. Так прибыль с первых продаж посчитается точно.</div>
+  <div class="lb" style="color:#8a7f72;margin:12px 2px 0">Бот загрузит ордера за последние 30 дней. Укажите, сколько USDT у вас сейчас и по какой цене (необязательно): с этого момента прибыль посчитается точно.</div>
   <div class="fl2"><input class="fld" id="bnU" inputmode="decimal" placeholder="USDT, напр. 500"><input class="fld" id="bnP" inputmode="decimal" placeholder="₴ за 1 USDT"></div>
   <div class="err" id="bnE"></div>
   <button class="gbtn" id="bnGo" onclick="connectBn()">Подключить</button><button class="tbtn" onclick="closeSheet()">Позже</button>`;
@@ -390,12 +392,12 @@ async function connectBn(){ if(bnBusy) return; const v=id=>$('#'+id).value.trim(
 function discBn(){ const go=async()=>{ try{ await api('/api/disconnect',{}); BN.connected=false; Object.keys(STAT).forEach(k=>delete STAT[k]); render(); toast('Binance отключён, ключ удалён') }catch(e){ toast(e.message) } };
   if(tg&&tg.showConfirm) tg.showConfirm('Отключить Binance? Ключ и загруженные ордера будут удалены.',ok=>ok&&go()); else go() }
 function resync(){ const go=async()=>{ toast('Загружаю ордера из Binance… это до минуты'); try{ const j=await api('/api/resync',{}); Object.assign(BN,j); Object.keys(STAT).forEach(k=>delete STAT[k]); render(true); toast(j.sync_error?'⚠ '+j.sync_error:'Готово ✓ Прибыль пересчитана') }catch(e){ toast(e.message) } };
-  hap('medium'); if(tg&&tg.showConfirm) tg.showConfirm('Скачать все ордера из Binance заново и пересчитать прибыль? Это займёт до минуты.',ok=>ok&&go()); else go() }
+  hap('medium'); if(tg&&tg.showConfirm) tg.showConfirm('Загрузить ордера из Binance заново и пересчитать прибыль?',ok=>ok&&go()); else go() }
 function openStart(){ if(!API){ toast('Откройте приложение заново кнопкой «Открыть» в чате бота'); return }
-  $('#sheetIn').innerHTML=`<div class="grab"></div><b style="font-size:19px">💵 Стартовый остаток USDT</b><div class="lb" style="color:#8a7f72;margin-top:6px">Сколько USDT у вас было до подключения и по какой средней цене вы их купили. От этого считается прибыль с первых продаж.</div>
-  <div class="fl2"><input class="fld" id="stU" inputmode="decimal" placeholder="USDT" value="${BN.start_usdt||''}"><input class="fld" id="stP" inputmode="decimal" placeholder="₴ за 1 USDT" value="${BN.start_price||''}"></div><div class="err" id="stE"></div>
+  $('#sheetIn').innerHTML=`<div class="grab"></div><b style="font-size:19px">💵 Мой остаток</b><div class="lb" style="color:#8a7f72;margin-top:6px">Сколько USDT у вас сейчас и по какой средней цене вы их купили. После сохранения прибыль начнёт считаться от этого остатка с текущего момента. История ордеров останется.</div>
+  <div class="fl2"><input class="fld" id="stU" inputmode="decimal" placeholder="USDT" value="${BN.start_usdt||''}"><input class="fld" id="stP" inputmode="decimal" placeholder="₴ за 1 USDT" value="${BN.start_price||''}"></div><input class="fld" id="stH" inputmode="decimal" placeholder="₴ на картах (необязательно)" value="${BN.start_uah||''}" style="margin-top:8px;width:100%;box-sizing:border-box"><div class="err" id="stE"></div>
   <button class="gbtn" onclick="saveStart()">Сохранить</button>`; $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
-async function saveStart(){ try{ const j=await api('/api/start',{start_usdt:$('#stU').value.trim()||0,start_price:$('#stP').value.trim()||0});
+async function saveStart(){ if(tg&&tg.showConfirm&&!saveStart.ok){ tg.showConfirm('Прибыль начнёт считаться от этого остатка с текущего момента. Продолжить?',ok=>{ if(ok){ saveStart.ok=1; saveStart() } }); return } saveStart.ok=0; try{ const j=await api('/api/start',{start_usdt:$('#stU').value.trim()||0,start_price:$('#stP').value.trim()||0,start_uah:$('#stH').value.trim()||0});
   Object.assign(BN,j); Object.keys(STAT).forEach(k=>delete STAT[k]); closeSheet(); render(); toast('Сохранено ✓') }catch(e){ $('#stE').textContent=e.message } }
 
 // ---------- календарь периода ----------
