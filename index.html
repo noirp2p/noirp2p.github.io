@@ -62,7 +62,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .ncat .ne{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:none;transition:transform .25s}.ncat .ne.pop{animation:epop .35s}
 @keyframes epop{40%{transform:scale(1.25) rotate(-8deg)}}
 .ncat input{flex:1;min-width:0;border:0;font:inherit;font-size:16px;outline:0;background:transparent}
-.ncat .es{display:flex;gap:6px;overflow-x:auto;margin-top:8px}.ncat .es button{font-size:22px;width:38px;height:38px;border-radius:10px;background:#f6f1e6;flex:none}.ncat .es button.on{box-shadow:0 0 0 2px var(--G)}
+.ncat .es{display:grid;grid-template-columns:repeat(auto-fill,minmax(38px,1fr));gap:6px;margin-top:8px}.ncat .es button{font-size:22px;height:38px;border-radius:10px;background:#f6f1e6}.ncat .es button.on{box-shadow:0 0 0 2px var(--G)}
 .ncat .ai{font-size:11px;opacity:.55;margin-top:6px}.ncat .bt{display:flex;gap:8px;margin-top:10px}.ncat .bt button{flex:1;height:40px;border-radius:12px;font-weight:700}
 .aw{position:fixed;left:12px;right:12px;top:calc(12px + var(--stop,0px));z-index:60;display:flex;justify-content:center;pointer-events:none}
 .aw .in{pointer-events:auto;max-width:440px;width:100%;background:var(--G);color:var(--C);border-radius:24px;padding:16px 18px;box-shadow:0 18px 40px rgba(0,0,0,.35);border:2px solid var(--P);animation:awIn .7s cubic-bezier(.2,1.4,.4,1) both;position:relative;overflow:hidden}
@@ -88,6 +88,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .lr{display:flex;gap:12px;align-items:center;background:#fff;border:1px solid var(--L);border-radius:18px;padding:8px 14px 8px 10px;margin-top:6px}
 .lr b{font-size:15px}.pl{width:22px;text-align:center;font-weight:800;opacity:.55}.pts{margin-left:auto;font-weight:800;font-size:15px;text-align:right;white-space:nowrap}.pts small{display:block;font-size:11px;font-weight:500;opacity:.5}
 .mine{position:fixed;left:0;right:0;bottom:calc(84px + var(--sbot));z-index:4;padding:0 12px}.mine .in{max-width:456px;margin:0 auto;display:flex;gap:12px;align-items:center;background:var(--P);border-radius:20px;padding:10px 16px 10px 10px;box-shadow:0 8px 24px rgba(0,0,0,.18)}.mine small{display:block;font-size:12px;opacity:.6}
+.mine .in.glass{background:rgba(30,30,30,.72);color:var(--C);backdrop-filter:blur(14px) saturate(140%);-webkit-backdrop-filter:blur(14px) saturate(140%);border:1px solid rgba(255,255,255,.12);box-shadow:0 8px 24px rgba(0,0,0,.25),inset 0 1px 0 rgba(255,255,255,.08)}
+.mine .in.glass small{color:var(--B);opacity:.9}
+.lr.glass{background:rgba(40,40,40,.82);color:var(--C);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}.lr.glass .pl{color:var(--B);opacity:.8}.lr.glass .pts small{color:var(--B)}
+.hid{display:inline-block;font-size:11px;font-weight:600;color:var(--B);background:rgba(255,255,255,.08);border-radius:8px;padding:1px 7px;margin-left:6px;vertical-align:2px}
 .gt{font-size:12px;font-weight:700;opacity:.5;margin:14px 6px 5px;text-transform:uppercase;letter-spacing:.5px}
 .grp{background:#fff;border:1px solid var(--L);border-radius:18px;overflow:hidden}
 .it{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-top:1px solid #f0eadf;width:100%;text-align:left}.it:first-child{border-top:0}.it b{font-size:14px}.it small{display:block;font-size:12px;opacity:.55}
@@ -231,13 +235,13 @@ const EMO = [[/кафе|кофе|кав|coffee|старбак/, '☕'],[/рес�
  [/сигар|вейп|табак|тютюн|кальян/, '🚬'],[/живот|кот|кіт|собак|пес|корм|ветерин/, '🐾'],[/техн|ноут|комп|гаджет|электрон|електрон|наушн|навушн/, '💻'],
  [/ремонт|мебел|меблі|дом\b|будин|інструм|инструм/, '🛠'],[/дет|діт|ребен|дитин|игрушк|іграшк/, '🧸'],[/благотвор|донат|зсу|армі|арми|волонт/, '💙'],
  [/налог|податок|штраф|комисс|коміс/, '🧾'],[/кредит|долг|борг|займ|позик|рассроч|розстроч/, '💳'],[/зарплат|зп\b|аванс|оклад|salary/, '💵'],
- [/p2p|п2п|крипт|usdt|бинанс|binance|арбитр/, '⇄'],[/бизнес|бізнес|клиент|клієнт|заказ|замовл|фриланс|фріланс|проект|проєкт/, '💼'],
+ [/p2p|п2п|крипт|usdt|бинанс|binance|арбитр/, '⇄'],[/работ|робот|бизнес|бізнес|клиент|клієнт|заказ|замовл|фриланс|фріланс|проект|проєкт/, '💼'],
  [/инвест|інвест|акци|дивиден|депозит|вклад|процент|відсот/, '📈'],[/продаж|продал|olx|перепрод/, '🏷'],[/кэшбэк|кешбек|бонус|возврат|поверн/, '🔙'],
  [/копил|скарбн|накоп|резерв|запас/, '🐷'],[/подработ|підробіт|халтур|чаев|чайов/, '🪙']];
 const EMO_ALL = ['🛒','🍽','☕','🚕','🚌','⛽','🏠','📱','🔁','🎮','👕','💊','🏋','💇','🎁','💕','📚','✈','🎉','🐾','💻','🛠','🧸','💙','🧾','💳','💵','⇄','💼','📈','🏷','🔙','🐷','🪙','💡','⭐'];
 function aiEmoji(name){ const n=name.toLowerCase().trim(); const hit=EMO.filter(([re])=>re.test(n)).map(x=>x[1]);
   const first = hit[0] || (n ? ((sh&&sh.mode)==='inc'?'💰':'💸') : '✨');
-  return {e:first, sug:[...new Set([...hit, ...EMO_ALL])].slice(0,18), sure:!!hit.length} }
+  return {e:first, sug:[...new Set([...hit, ...EMO_ALL])].slice(0,24), sure:!!hit.length} }
 function saveCats(){ store.set('ucats',UCATS); store.set('catsDirty',1);
   if(API&&BN.profile) api('/api/cats',{cats:UCATS}).then(()=>{ try{localStorage.removeItem('noir_catsDirty')}catch(e){} }).catch(e=>toast(e.message)) }
 function newCat(){ sh.nc={n:'',e:'✨',pick:false}; drawSheet(); setTimeout(()=>{ const i=$('#ncN'); if(i) i.focus() },60) }
@@ -400,19 +404,20 @@ function vFin(){
 function vRat(){
   loadRat(); const R=RAT.d, top=R?R.top:[], yr=R?R.year:new Date().getFullYear();
   const lav=(e,sz,ring)=> e.me?avatar(sz,ring):`<div class="av" style="width:${sz}px;height:${sz}px;font-size:${sz*.4}px;${ring?'box-shadow:0 0 0 3px '+ring:''}">${esc((e.nick.replace('@','')||'?')[0].toUpperCase())}</div>`;
-  const nm = e => esc(e.me?(store.get('name')||e.nick):e.nick)+(e.hidden?' 🙈':'');
+  const hidE = e => e.hidden || (e.me && !store.get('showRating',true));
+  const nm = e => esc(e.me?(store.get('name')||e.nick):e.nick)+(hidE(e)?'<span class="hid">🙈 скрыт</span>':'');
   const pod = [2,1,3].map(k=>{ const e=top[k-1], h=({1:118,2:88,3:70})[k];
-    return `<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}${e?lav(e,k===1?58:48,k===1?'var(--P)':''):`<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:#efe8da;color:#b9ad9a">?</div>`}<div class="pn"${e?'':' style="opacity:.5"'}>${e?nm(e):'свободно'}</div><div class="pp">${e?fmt(e.pts):0} очк.</div><div class="pod" style="height:${h}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>` }).join('');
-  const list = top.slice(3).map(e=>`<div class="lr"${e.me?' style="background:var(--P);border-color:var(--P)"':''}><div class="pl">${e.place}</div>${lav(e,40,e.me?'#353535':'')}<div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${nm(e)}</b></div><div class="pts">${fmt(e.pts)}<small>очков</small></div></div>`).join('');
+    return `<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}${e?(hidE(e)?`<div style="opacity:.55;filter:grayscale(.6)">${lav(e,k===1?58:48,'#353535')}</div>`:lav(e,k===1?58:48,k===1?'var(--P)':'')):`<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:#efe8da;color:#b9ad9a">?</div>`}<div class="pn"${e?'':' style="opacity:.5"'}>${e?esc(e.me?(store.get('name')||e.nick):e.nick):'свободно'}</div><div class="pp">${e&&hidE(e)?'🙈 ':''}${e?fmt(e.pts):0} очк.</div><div class="pod" style="height:${h}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>` }).join('');
+  const list = top.slice(3).map(e=>`<div class="lr${hidE(e)?' glass':''}"${e.me&&!hidE(e)?' style="background:var(--P);border-color:var(--P)"':''}><div class="pl">${e.place}</div>${lav(e,40,e.me?'#353535':'')}<div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${nm(e)}</b></div><div class="pts">${fmt(e.pts)}<small>очков</small></div></div>`).join('');
   const info = !R ? (RAT.err&&!RAT.p ? `<div class="card lt" style="text-align:center;padding:18px 16px"><b>Нет связи с ботом</b><div class="lb" style="margin-top:4px">${esc(RAT.err)}</div><button class="gbtn" onclick="loadRat(true);render(true)">Повторить</button></div>`
       : `<div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">${API?'Загружаю рейтинг…':'Откройте приложение кнопкой «Открыть» в чате бота'}</span></div>`)
     : top.length<2 ? `<div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">Участников пока мало — рейтинг заполнится, когда в боте появятся другие игроки</span></div>` : '';
   const me = R&&R.me;
   return `${topBar()}<h1 class="ttl">Рейтинг</h1><div class="ssn" data-t="season"><span>🏆 Сезон ${yr}</span><small>сброс 1 января · призы скоро</small></div>
   <div class="podw" data-t="podium">${pod}</div>
-  ${R&&R.admin?`<div class="lb" style="margin:10px 4px 0;font-size:12px">👁 Вы админ: видите всех, скрытые отмечены 🙈</div>`:''}
+  ${R&&R.admin?`<div class="lb" style="margin:10px 4px 0;font-size:12px">👁 Вы админ: видите всех, скрытые — тёмные с пометкой «🙈 скрыт»</div>`:''}
   <div data-t="list">${list}</div>${info}<div style="height:${me?90:20}px"></div>
-  ${me?`<div class="mine"><div class="in" data-t="mine"><div class="pl">${me.place}</div>${avatar(40,'#353535')}<div style="min-width:0"><b>Вы · ${esc(store.get('name')||nickName)}</b><small>${store.get('showRating',true)?'место '+me.place+' из '+R.total:'вас видите только вы'}</small></div><div class="pts">${fmt(me.pts)}<small>очков</small></div></div></div>`:''}`;
+  ${me?`<div class="mine"><div class="in${store.get('showRating',true)?'':' glass'}" data-t="mine"><div class="pl">${me.place}</div>${avatar(40,store.get('showRating',true)?'#353535':'#CCBAAA')}<div style="min-width:0"><b>Вы · ${esc(store.get('name')||nickName)}</b><small>${store.get('showRating',true)?'место '+me.place+' из '+R.total:'🙈 вас видите только вы'}</small></div><div class="pts">${fmt(me.pts)}<small>очков</small></div></div></div>`:''}`;
 }
 function vPro(){
   const sw = (k,d) => `<span class="sw ${store.get(k,d)?'on':''}"><i></i></span>`;
