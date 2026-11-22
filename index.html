@@ -199,13 +199,14 @@ let TXQ = store.get('txq', []);   // операции, которые ещё н�
 function qPush(o){ TXQ.push(o); store.set('txq',TXQ) }
 let FLUSH=null;
 function flushQ(){ if(!API||!BN.profile) return Promise.resolve(false); if(FLUSH) return FLUSH;
+  if(!TXQ.length) return Promise.resolve(true);
   FLUSH=(async()=>{ try{ while(TXQ.length){ const o=TXQ[0];
       try{ if(o.op==='del'){ await api('/api/tx/del',{id:o.id}); TXQ.splice(0,1) }
            else { let n=0; while(n<TXQ.length&&n<50&&TXQ[n].op==='put') n++; await api('/api/tx',{items:TXQ.slice(0,n).map(x=>x.t)}); TXQ.splice(0,n) } }
       catch(e){ if(e.net||[401,404,405,413,429].includes(e.status)||e.status>=500) return false;  // нет связи — отправим позже
                 TXQ.splice(0,1); toast(e.message) }                                         // бот отказал — не застреваем
-      store.set('txq',TXQ) } return true } finally{ FLUSH=null } })();
-  return FLUSH }
+      store.set('txq',TXQ) } return true } catch(e){ return false } })();
+  FLUSH.finally(()=>{ FLUSH=null }); return FLUSH }
 async function loadTx(){ if(!(await flushQ())) return;
   const j=await api('/api/tx'); const put={}, del={}; TXQ.forEach(o=>o.op==='put'?put[o.t.id]=o.t:del[o.id]=1);
   TX=j.items.filter(t=>!del[t.id]&&!put[t.id]).concat(Object.values(put)); store.set('tx2',TX); if(!T&&!$('#splash')) render(true) }
