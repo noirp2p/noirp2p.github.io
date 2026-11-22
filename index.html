@@ -47,6 +47,8 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .dim{position:fixed;inset:0;background:rgba(30,30,30,.45);z-index:20;opacity:0;pointer-events:none;transition:opacity .3s}.dim.on{opacity:1;pointer-events:auto}
 .sheet{position:fixed;left:0;right:0;bottom:0;z-index:21;transform:translateY(105%);transition:transform .35s cubic-bezier(.3,.9,.3,1)}.sheet.on{transform:none}
 .sheet .in{max-width:480px;margin:0 auto;background:var(--C);border-radius:28px 28px 0 0;padding:10px 16px calc(18px + var(--sbot));box-shadow:0 -10px 40px rgba(0,0,0,.25)}
+.sheet .in{max-height:calc(100vh - 8px);max-height:calc(100dvh - 8px);overflow-y:auto;overscroll-behavior:contain}
+@media (max-height:760px){.k{height:40px;font-size:19px}.kp,.kp4{gap:5px;margin-top:7px}.sheet .amt{font-size:36px;margin:6px 0}.sheet .note{padding-top:9px;padding-bottom:9px}}
 .grab{width:44px;height:5px;border-radius:3px;background:#d8cfc0;margin:0 auto 10px}
 .tg2{display:flex;background:#efe8da;border-radius:16px;padding:4px;margin:0 auto;width:max-content}.tg2 button{padding:9px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:.55}.tg2 .on{background:var(--G);color:var(--C);opacity:1}
 .amt{text-align:center;font-size:48px;font-weight:800;margin:14px 0}
