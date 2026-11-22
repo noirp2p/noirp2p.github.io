@@ -55,8 +55,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .grab{width:44px;height:5px;border-radius:3px;background:#d8cfc0;margin:0 auto 10px}
 .tg2{display:flex;background:#efe8da;border-radius:16px;padding:4px;margin:0 auto;width:max-content}.tg2 button{padding:9px 16px;border-radius:12px;font-weight:700;font-size:14px;opacity:.55}.tg2 .on{background:var(--G);color:var(--C);opacity:1}
 .amt{text-align:center;font-size:48px;font-weight:800;margin:14px 0}
-.cats{display:flex;gap:7px;overflow-x:auto;padding:4px 2px}.cat{width:44px;height:44px;border-radius:12px;font-size:20px;flex:none}.cat.on{box-shadow:0 0 0 3px var(--G)}
+.cats{display:flex;gap:9px;overflow-x:auto;padding:8px 8px 4px 2px}.cat{width:44px;height:44px;border-radius:12px;font-size:20px;flex:none}.cat.on{box-shadow:0 0 0 3px var(--G)}
 .cl{text-align:center;font-size:13px;font-weight:700;margin-top:4px}
+.cat{position:relative}.cat .x{position:absolute;top:-6px;right:-6px;width:20px;height:20px;border-radius:50%;background:var(--T);color:#fff;font-size:12px;line-height:20px;font-weight:800;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.cdel{display:block;margin:4px auto 0;font-size:12px;font-weight:700;color:var(--T);background:#fbe9e4;border-radius:10px;padding:4px 10px}
 .cat.add{background:#fff;border:1.5px dashed #b9ad9a;color:#8a8a8a;font-size:24px}
 .ncat{background:#fff;border:1px solid #e6ddcc;border-radius:16px;padding:12px;margin-top:8px}.ncat .nr{display:flex;gap:10px;align-items:center}
 .ncat .ne{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:none;transition:transform .25s}.ncat .ne.pop{animation:epop .35s}
@@ -231,7 +233,7 @@ const EMO = [[/кафе|кофе|кав|coffee|старбак/, '☕'],[/рес�
  [/одеж|одяг|шмот|кроссов|кросів|взутт|обув|zara/, '👕'],[/здоров|аптек|лекар|лік|врач|лікар|стомат|зуб/, '💊'],
  [/спорт|зал|фитнес|фітнес|gym|трениров/, '🏋'],[/красот|краса|барбер|стриж|салон|маникюр|манікюр|космет/, '💇'],
  [/подар|gift|день рожд|др\b/, '🎁'],[/девушк|дівчин|свидан|побачен|любов/, '💕'],[/учеб|навчан|универ|універ|курс|книг|школ/, '📚'],
- [/путеш|подорож|отпуск|відпуст|билет|квиток|отел|готел|авиа|літак|самол/, '✈'],[/кино|кіно|театр|концерт|развлеч|розваг|клуб|бар\b|пиво|алко/, '🎉'],
+ [/путеш|подорож|отпуск|відпуст|билет|квиток|отел|готел|авиа|літак|самол/, '✈'],[/кино|кіно|театр|концерт|развлеч|розваг|клуб/, '🎉'],[/пив|алко|вин[оа]|водк|бар\b/, '🍺'],
  [/сигар|вейп|табак|тютюн|кальян/, '🚬'],[/живот|кот|кіт|собак|пес|корм|ветерин/, '🐾'],[/техн|ноут|комп|гаджет|электрон|електрон|наушн|навушн/, '💻'],
  [/ремонт|мебел|меблі|дом\b|будин|інструм|инструм/, '🛠'],[/дет|діт|ребен|дитин|игрушк|іграшк/, '🧸'],[/благотвор|донат|зсу|армі|арми|волонт/, '💙'],
  [/налог|податок|штраф|комисс|коміс/, '🧾'],[/кредит|долг|борг|займ|позик|рассроч|розстроч/, '💳'],[/зарплат|зп\b|аванс|оклад|salary/, '💵'],
@@ -239,12 +241,26 @@ const EMO = [[/кафе|кофе|кав|coffee|старбак/, '☕'],[/рес�
  [/инвест|інвест|акци|дивиден|депозит|вклад|процент|відсот/, '📈'],[/продаж|продал|olx|перепрод/, '🏷'],[/кэшбэк|кешбек|бонус|возврат|поверн/, '🔙'],
  [/копил|скарбн|накоп|резерв|запас/, '🐷'],[/подработ|підробіт|халтур|чаев|чайов/, '🪙']];
 const EMO_ALL = ['🛒','🍽','☕','🚕','🚌','⛽','🏠','📱','🔁','🎮','👕','💊','🏋','💇','🎁','💕','📚','✈','🎉','🐾','💻','🛠','🧸','💙','🧾','💳','💵','⇄','💼','📈','🏷','🔙','🐷','🪙','💡','⭐'];
-function aiEmoji(name){ const n=name.toLowerCase().trim(); const hit=EMO.filter(([re])=>re.test(n)).map(x=>x[1]);
-  const first = hit[0] || (n ? ((sh&&sh.mode)==='inc'?'💰':'💸') : '✨');
-  return {e:first, sug:[...new Set([...hit, ...EMO_ALL])].slice(0,24), sure:!!hit.length} }
+let EDB=null;  // словарь ~1600 эмодзи с русскими и украинскими словами (грузится, когда создают категорию)
+function loadEDB(){ if(EDB) return; EDB=[]; fetch('emoji.json').then(r=>r.json()).then(d=>{ EDB=d.map(([e,l,w])=>[e,l.split(' '),w.split(' ')]); if(sh&&sh.nc&&!sh.nc.pick) ncType(sh.nc.n) }).catch(()=>{ EDB=null }) }
+const stemW = t => t.length>4 ? t.replace(/(ами|ями|ого|его|ому|ему|ов|ев|ей|ах|ях|ом|ем|ой|ий|ый|ая|ое|ые|ие|ую|юю|а|я|ы|и|у|ю|е|о|ь|й|і|ї)$/,'') : t;
+function edbFind(toks){ const sc=[]; if(!EDB||!EDB.length) return [];
+  EDB.forEach(([e,lab,ws],i)=>{ if(e.includes('➡')) return; let s=0; for(const t of toks){ let b=0;
+    for(const w of lab) if(w.startsWith(t)) b=3;
+    if(b<3) for(const w of ws){ if(w===t) b=Math.max(b,2.5); else if(w.startsWith(t)) b=Math.max(b,2); else if(w.length>=4&&t.startsWith(w)) b=Math.max(b,1) }
+    s+=b } if(s) sc.push([s,i,e]) });
+  return sc.sort((a,b)=>b[0]-a[0]||a[1]-b[1]).map(x=>x[2]) }
+function aiEmoji(name){ const n=name.toLowerCase().trim(); if(!n) return {e:'✨', sug:EMO_ALL.slice(0,24), sure:false};
+  const cur=EMO.filter(([re])=>re.test(n)).map(x=>x[1]);
+  const toks=(n.match(/[a-zа-яёіїєґ']+/g)||[]).filter(t=>t.length>=3).map(stemW);
+  let found=edbFind(toks); if(!found.length&&toks.length) found=edbFind(toks.map(t=>t.slice(0,4)).filter(t=>t.length>=3));
+  const hit=[...new Set([...cur,...found])];
+  const pool=EMO_ALL.slice(); const h=[...n].reduce((a,ch)=>(a*31+ch.charCodeAt(0))>>>0,7);
+  for(let i=pool.length-1;i>0;i--){ const j=(h+i*7)%(i+1); [pool[i],pool[j]]=[pool[j],pool[i]] }  // для каждого слова — свой набор
+  return {e:hit[0]||pool[0], sug:[...new Set([...hit,...pool])].slice(0,24), sure:!!hit.length} }
 function saveCats(){ store.set('ucats',UCATS); store.set('catsDirty',1);
   if(API&&BN.profile) api('/api/cats',{cats:UCATS}).then(()=>{ try{localStorage.removeItem('noir_catsDirty')}catch(e){} }).catch(e=>toast(e.message)) }
-function newCat(){ sh.nc={n:'',e:'✨',pick:false}; drawSheet(); setTimeout(()=>{ const i=$('#ncN'); if(i) i.focus() },60) }
+function newCat(){ loadEDB(); sh.nc={n:'',e:'✨',pick:false}; drawSheet(); setTimeout(()=>{ const i=$('#ncN'); if(i) i.focus() },60) }
 function ncType(v){ sh.nc.n=v; if(!sh.nc.pick){ const a=aiEmoji(v), el=$('#ncE'); if(a.e!==sh.nc.e&&el){ sh.nc.e=a.e; el.textContent=a.e; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop') } $('#ncS').innerHTML=ncSug(a.sug); $('#ncAi').textContent=v.trim()?(a.sure?'🤖 ИИ подобрал значок — можно выбрать другой':'🤖 Не уверен в значке — выберите подходящий ниже'):'🤖 Впишите название — ИИ подберёт значок' } }
 const ncSug = sug => sug.map(e=>`<button class="${e===sh.nc.e?'on':''}" onclick="sh.nc.e='${e}';sh.nc.pick=true;$('#ncE').textContent='${e}';[...this.parentNode.children].forEach(b=>b.classList.remove('on'));this.classList.add('on')">${e}</button>`).join('');
 function addCat(){ const n=(sh.nc.n||'').trim(); if(n.length<2){ toast('Название — хотя бы 2 буквы'); return }
@@ -468,8 +484,8 @@ function drawSheet(){
   ${sh.debt?'':sh.nc?`<div class="ncat"><div class="nr"><div class="ne" id="ncE" style="background:${CPAL[UCATS.length%CPAL.length]}">${sh.nc.e}</div><input id="ncN" maxlength="20" placeholder="Название, например «Такси»" value="${esc(sh.nc.n)}" oninput="ncType(this.value)" autocomplete="off"></div>
      <div class="es" id="ncS">${ncSug(aiEmoji(sh.nc.n).sug)}</div><div class="ai" id="ncAi">🤖 Впишите название — ИИ подберёт значок</div>
      <div class="bt"><button style="background:#efe8da" onclick="sh.nc=null;drawSheet()">Отмена</button><button style="background:var(--G);color:var(--C)" onclick="addCat()">Добавить</button></div></div>`
-   :`<div class="cats" style="margin-top:8px">${cats.map(k=>{ const c=catInfo(k); return `<button class="cat ${k===sh.cat?'on':''}" style="background:${c[2]};color:${c[3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${c[0]}</button>` }).join('')}<button class="cat add" onclick="newCat()">＋</button></div>
-     <div class="cl">${esc(catInfo(sh.cat)[1])}${/^u\d/.test(sh.cat)?` <button style="font-size:12px;opacity:.5;margin-left:6px" onclick="delCat('${sh.cat}')">🗑</button>`:''}</div>`}
+   :`<div class="cats" style="margin-top:8px">${cats.map(k=>{ const c=catInfo(k); return `<button class="cat ${k===sh.cat?'on':''}" style="background:${c[2]};color:${c[3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${c[0]}${k===sh.cat&&/^u\d/.test(k)?`<span class="x" onclick="event.stopPropagation();delCat('${k}')">×</span>`:''}</button>` }).join('')}<button class="cat add" onclick="newCat()">＋</button></div>
+     <div class="cl">${esc(catInfo(sh.cat)[1])}</div>${/^u\d/.test(sh.cat)?`<button class="cdel" onclick="delCat('${sh.cat}')">🗑 Удалить категорию</button>`:''}`}
   <div class="kp4">${['1','2','3','+','4','5','6','−','7','8','9','×',',','0','⌫','÷'].map(x=>`<button class="k ${'+−×÷'.includes(x)?'op':''}" onclick="key('${x}')">${x}</button>`).join('')}</div>
   <button class="gbtn" onclick="saveTx()">Сохранить</button>`;
 }
