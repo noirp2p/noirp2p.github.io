@@ -57,6 +57,23 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .amt{text-align:center;font-size:48px;font-weight:800;margin:14px 0}
 .cats{display:flex;gap:7px;overflow-x:auto;padding:4px 2px}.cat{width:44px;height:44px;border-radius:12px;font-size:20px;flex:none}.cat.on{box-shadow:0 0 0 3px var(--G)}
 .cl{text-align:center;font-size:13px;font-weight:700;margin-top:4px}
+.cat.add{background:#fff;border:1.5px dashed #b9ad9a;color:#8a8a8a;font-size:24px}
+.ncat{background:#fff;border:1px solid #e6ddcc;border-radius:16px;padding:12px;margin-top:8px}.ncat .nr{display:flex;gap:10px;align-items:center}
+.ncat .ne{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:26px;flex:none;transition:transform .25s}.ncat .ne.pop{animation:epop .35s}
+@keyframes epop{40%{transform:scale(1.25) rotate(-8deg)}}
+.ncat input{flex:1;min-width:0;border:0;font:inherit;font-size:16px;outline:0;background:transparent}
+.ncat .es{display:flex;gap:6px;overflow-x:auto;margin-top:8px}.ncat .es button{font-size:22px;width:38px;height:38px;border-radius:10px;background:#f6f1e6;flex:none}.ncat .es button.on{box-shadow:0 0 0 2px var(--G)}
+.ncat .ai{font-size:11px;opacity:.55;margin-top:6px}.ncat .bt{display:flex;gap:8px;margin-top:10px}.ncat .bt button{flex:1;height:40px;border-radius:12px;font-weight:700}
+.aw{position:fixed;left:12px;right:12px;top:calc(12px + var(--stop,0px));z-index:60;display:flex;justify-content:center;pointer-events:none}
+.aw .in{pointer-events:auto;max-width:440px;width:100%;background:var(--G);color:var(--C);border-radius:24px;padding:16px 18px;box-shadow:0 18px 40px rgba(0,0,0,.35);border:2px solid var(--P);animation:awIn .7s cubic-bezier(.2,1.4,.4,1) both;position:relative;overflow:hidden}
+.aw.out .in{animation:awOut .45s ease-in both}
+@keyframes awIn{from{transform:translateY(-140%) scale(.9);opacity:0}}@keyframes awOut{to{transform:translateY(-140%) scale(.9);opacity:0}}
+.aw .big{font-size:40px;font-weight:800;color:var(--P);line-height:1;display:flex;align-items:baseline;gap:8px}.aw .big small{font-size:15px;color:var(--B);font-weight:600}
+.aw .ln{display:flex;align-items:center;gap:10px;margin-top:10px;font-size:14px;animation:awLn .5s both}.aw .ln i{font-style:normal;width:30px;height:30px;border-radius:10px;background:#4a4a4a;display:flex;align-items:center;justify-content:center;flex:none}
+.aw .ln b{margin-left:auto;color:var(--P);white-space:nowrap}.aw .ln small{display:block;color:var(--B);font-size:12px}
+@keyframes awLn{from{transform:translateX(-14px);opacity:0}}
+.aw .in>*:not(.sp){position:relative;z-index:1}.aw .sp{position:absolute;z-index:0;font-size:14px;opacity:.8;animation:awSp 1.4s ease-out both;pointer-events:none}
+@keyframes awSp{from{transform:translate(0,0) scale(.4);opacity:1}to{transform:translate(var(--x),var(--y)) scale(1);opacity:0}}
 .note{width:100%;background:#fff;border:1px solid #e6ddcc;border-radius:16px;padding:12px;margin-top:8px;font-size:14px;font-family:inherit}
 .rb2{width:42px;height:42px;border-radius:50%;background:#fff;border:1px solid var(--L);font-size:18px;font-weight:700}
 .menu{position:absolute;right:0;top:50px;z-index:3;background:var(--G);color:var(--C);border-radius:18px;padding:8px;min-width:200px;box-shadow:0 10px 30px rgba(0,0,0,.3)}.menu button{display:block;width:100%;text-align:left;padding:10px 12px;font-size:15px;border-radius:10px}.menu .mh{font-size:12px;color:var(--B);padding:8px 12px 2px;border-top:1px solid #4a4a4a;margin-top:4px}
@@ -147,6 +164,7 @@ async function api(path, body){
   try{ r = await fetch(API+path, {method:body?'POST':'GET', headers:Object.assign({'X-Init-Data':(tg&&tg.initData)||''}, /\.ngrok(-free)?\.(app|dev)$/.test(new URL(API).hostname)?{'ngrok-skip-browser-warning':'1'}:{}, body?{'Content-Type':'application/json'}:{}), body:body?JSON.stringify(body):undefined}) }
   catch(e){ const x=new Error('Бот сейчас не на связи. Попробуйте позже или откройте приложение заново.'); x.net=true; throw x }
   try{ j = await r.json() }catch(e){}
+  if(j.fresh&&j.fresh.length) awards(j.fresh);
   if(!r.ok || !j.ok){ const x=new Error(j.error || 'Бот сейчас не на связи. Попробуйте позже.'); x.status=r.status; x.net=!j.error; throw x }
   return j }
 const DAYMS=864e5, dayStart = d => { const x=new Date(d); x.setHours(0,0,0,0); return +x };
@@ -194,7 +212,60 @@ const ME = {place:'—', pts:0, streak:0};
 const RAT = {d:null, at:0, err:null, p:0};
 const plDays = n => n%10===1&&n%100!==11?'день':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'дня':'дней');
 function setProf(p){ if(!p) return; ME.place=p.place||'—'; ME.pts=p.pts||0; ME.streak=p.streak||0;
-  if(p.name) store.set('name',p.name); store.set('showRating',!!p.show_rating); store.set('notif',!!p.notif) }
+  if(p.name) store.set('name',p.name); store.set('showRating',!!p.show_rating); store.set('notif',!!p.notif);
+  if(Array.isArray(p.cats)&&!store.get('catsDirty')){ UCATS=p.cats; store.set('ucats',UCATS) } }
+// ---------- свои категории «Финансов»: эмодзи подбирает ИИ-словарь (позже — Gemini) ----------
+let UCATS = store.get('ucats', []);
+const CPAL = ['#E8B4A0','#CCBAAA','#F2C6CC','#d8cfc0','#B9A6C9','#E4DCCD','#D9826F'];
+const NONE = ['💸','Без категории','#E4DCCD'];
+function catInfo(k){ const u=UCATS.find(c=>c.id===k); if(u) return [u.e,u.n,CPAL[(+u.id.slice(1))%CPAL.length]]; return CAT[k]||NONE }
+const EMO = [[/кафе|кофе|кав|coffee|старбак/, '☕'],[/ресторан|рест|суш|пицц|бургер|шаурм|шаверм|кебаб|хот-?дог|обед|обід|ужин|вечер|сніданок|завтрак|ланч|столов|їдальн|макдон|mcdon|kfc|фастфуд|доставк|глово|glovo|bolt food/, '🍽'],
+ [/сладк|солодк|десерт|морожен|морозив|торт|конфет|цукер/, '🍰'],[/еда|продукт|магаз|супермар|сільпо|сильпо|атб|novus|новус|фора|ашан|їж|харч/, '🛒'],[/такси|uber|убер|bolt|болт|uklon|уклон/, '🚕'],
+ [/транспорт|метро|автобус|маршрут|проезд|проїзд|трамва|тролейб/, '🚌'],[/бенз|заправ|топлив|пальн|окко|wog|авто|машин|сто\b|шин/, '⛽'],
+ [/квартир|аренд|оренд|жиль|житл|комунал|коммунал|свет|газ\b|вод/, '🏠'],[/связ|мобил|телефон|киевстар|київстар|vodafone|lifecell|интернет|інтернет/, '📱'],
+ [/подпис|netflix|youtube|spotify|apple|icloud|chatgpt|сервис/, '🔁'],[/игр|ігр|steam|ps5|playstation|xbox|донат/, '🎮'],
+ [/одеж|одяг|шмот|кроссов|кросів|взутт|обув|zara/, '👕'],[/здоров|аптек|лекар|лік|врач|лікар|стомат|зуб/, '💊'],
+ [/спорт|зал|фитнес|фітнес|gym|трениров/, '🏋'],[/красот|краса|барбер|стриж|салон|маникюр|манікюр|космет/, '💇'],
+ [/подар|gift|день рожд|др\b/, '🎁'],[/девушк|дівчин|свидан|побачен|любов/, '💕'],[/учеб|навчан|универ|універ|курс|книг|школ/, '📚'],
+ [/путеш|подорож|отпуск|відпуст|билет|квиток|отел|готел|авиа|літак|самол/, '✈'],[/кино|кіно|театр|концерт|развлеч|розваг|клуб|бар\b|пиво|алко/, '🎉'],
+ [/сигар|вейп|табак|тютюн|кальян/, '🚬'],[/живот|кот|кіт|собак|пес|корм|ветерин/, '🐾'],[/техн|ноут|комп|гаджет|электрон|електрон|наушн|навушн/, '💻'],
+ [/ремонт|мебел|меблі|дом\b|будин|інструм|инструм/, '🛠'],[/дет|діт|ребен|дитин|игрушк|іграшк/, '🧸'],[/благотвор|донат|зсу|армі|арми|волонт/, '💙'],
+ [/налог|податок|штраф|комисс|коміс/, '🧾'],[/кредит|долг|борг|займ|позик|рассроч|розстроч/, '💳'],[/зарплат|зп\b|аванс|оклад|salary/, '💵'],
+ [/p2p|п2п|крипт|usdt|бинанс|binance|арбитр/, '⇄'],[/бизнес|бізнес|клиент|клієнт|заказ|замовл|фриланс|фріланс|проект|проєкт/, '💼'],
+ [/инвест|інвест|акци|дивиден|депозит|вклад|процент|відсот/, '📈'],[/продаж|продал|olx|перепрод/, '🏷'],[/кэшбэк|кешбек|бонус|возврат|поверн/, '🔙'],
+ [/копил|скарбн|накоп|резерв|запас/, '🐷'],[/подработ|підробіт|халтур|чаев|чайов/, '🪙']];
+const EMO_ALL = ['🛒','🍽','☕','🚕','🚌','⛽','🏠','📱','🔁','🎮','👕','💊','🏋','💇','🎁','💕','📚','✈','🎉','🐾','💻','🛠','🧸','💙','🧾','💳','💵','⇄','💼','📈','🏷','🔙','🐷','🪙','💡','⭐'];
+function aiEmoji(name){ const n=name.toLowerCase().trim(); const hit=EMO.filter(([re])=>re.test(n)).map(x=>x[1]);
+  const first = hit[0] || (n ? ((sh&&sh.mode)==='inc'?'💰':'💸') : '✨');
+  return {e:first, sug:[...new Set([...hit, ...EMO_ALL])].slice(0,18), sure:!!hit.length} }
+function saveCats(){ store.set('ucats',UCATS); store.set('catsDirty',1);
+  if(API&&BN.profile) api('/api/cats',{cats:UCATS}).then(()=>{ try{localStorage.removeItem('noir_catsDirty')}catch(e){} }).catch(e=>toast(e.message)) }
+function newCat(){ sh.nc={n:'',e:'✨',pick:false}; drawSheet(); setTimeout(()=>{ const i=$('#ncN'); if(i) i.focus() },60) }
+function ncType(v){ sh.nc.n=v; if(!sh.nc.pick){ const a=aiEmoji(v), el=$('#ncE'); if(a.e!==sh.nc.e&&el){ sh.nc.e=a.e; el.textContent=a.e; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop') } $('#ncS').innerHTML=ncSug(a.sug); $('#ncAi').textContent=v.trim()?(a.sure?'🤖 ИИ подобрал значок — можно выбрать другой':'🤖 Не уверен в значке — выберите подходящий ниже'):'🤖 Впишите название — ИИ подберёт значок' } }
+const ncSug = sug => sug.map(e=>`<button class="${e===sh.nc.e?'on':''}" onclick="sh.nc.e='${e}';sh.nc.pick=true;$('#ncE').textContent='${e}';[...this.parentNode.children].forEach(b=>b.classList.remove('on'));this.classList.add('on')">${e}</button>`).join('');
+function addCat(){ const n=(sh.nc.n||'').trim(); if(n.length<2){ toast('Название — хотя бы 2 буквы'); return }
+  if(UCATS.some(c=>!c.del&&c.t===sh.mode&&c.n.toLowerCase()===n.toLowerCase())){ toast('Такая категория уже есть'); return }
+  if(UCATS.length>=60){ toast('Максимум 60 категорий'); return }
+  const c={id:'u'+Date.now(), n:n[0].toUpperCase()+n.slice(1), e:sh.nc.e, t:sh.mode}; UCATS.push(c); sh.cat=c.id; sh.nc=null; saveCats(); hap('medium'); drawSheet(); toast(c.e+' Категория «'+c.n+'» добавлена') }
+function delCat(id){ const c=UCATS.find(x=>x.id===id); if(!c) return; const go=()=>{ c.del=true; sh.cat='none'; saveCats(); drawSheet(); toast('Категория удалена') };
+  if(tg&&tg.showConfirm) tg.showConfirm('Удалить категорию «'+c.n+'»? Старые записи останутся.',ok=>ok&&go()); else go() }
+
+// ---------- рамка «+N очков» ----------
+const MONN=['январь','февраль','март','апрель','май','июнь','июль','август','сентябрь','октябрь','ноябрь','декабрь'];
+let AWQ=[];
+function awards(list){ AWQ=AWQ.concat(list); setTimeout(showAwards,300) }
+function showAwards(){ if(!AWQ.length||$('.aw')) return; if($('#splash')||T){ setTimeout(showAwards,800); return }
+  const L=AWQ; AWQ=[]; const tot=L.reduce((a,x)=>a+x.pts,0); if(!tot) return;
+  const row = x => x.kind==='day' ? ['🔥','За вход сегодня','Серия: '+x.streak+' '+plDays(x.streak)+' подряд']
+    : x.kind==='api' ? ['🔑','За подключение Binance API','один раз — навсегда']
+    : x.kind==='turn' ? ['📈','Оборот за '+MONN[+x.key.slice(5,7)-1],'закуп больше '+fmt(x.level)+' ₴'] : ['⭐','Бонус',''];
+  document.body.insertAdjacentHTML('beforeend',`<div class="aw" onclick="hideAw()"><div class="in"><div class="big">+<span class="cnt" data-v="${tot}">0</span><small>${tot%10===1&&tot%100!==11?'очко':(tot%10>=2&&tot%10<=4&&(tot%100<10||tot%100>=20)?'очка':'очков')} в рейтинг 🏆</small></div>
+    ${L.map((x,i)=>{ const [ic,t,sub]=row(x); return `<div class="ln" style="animation-delay:${.35+i*.12}s"><i>${ic}</i><span>${t}${sub?`<small>${sub}</small>`:''}</span><b>+${x.pts}</b></div>` }).join('')}</div></div>`);
+  const c=$('.aw .cnt'), t0=performance.now(); const f=t=>{ const k=Math.min(1,(t-t0)/900); c.textContent=Math.round(tot*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(f) }; setTimeout(()=>requestAnimationFrame(f),350);
+  try{ tg.HapticFeedback.notificationOccurred('success') }catch(e){}
+  RAT.at=0; clearTimeout(showAwards.t); showAwards.t=setTimeout(hideAw, 3800+L.length*500) }
+function hideAw(){ const a=$('.aw'); if(!a||a.classList.contains('out')) return; a.classList.add('out'); setTimeout(()=>{ a.remove(); if(AWQ.length) showAwards() },450) }
+
 let TXQ = store.get('txq', []);   // операции, которые ещё не дошли до бота (нет связи)
 function qPush(o){ TXQ.push(o); store.set('txq',TXQ) }
 let FLUSH=null;
@@ -214,6 +285,7 @@ async function migrate(p){ // один раз: переносим то, что �
   const s={}, n=store.get('name');
   if(n&&(!p.name||store.get('nameDirty'))&&n!==p.name) s.name=n;
   if(!store.get('mig6')){ if(store.get('showRating',true)===false&&p.show_rating) s.show_rating=false; if(store.get('notif',true)===false&&p.notif) s.notif=false }
+  if(store.get('catsDirty')){ try{ await api('/api/cats',{cats:UCATS}); p.cats=UCATS; localStorage.removeItem('noir_catsDirty') }catch(e){} }
   if(Object.keys(s).length){ try{ p=(await api('/api/settings',s)).profile; try{localStorage.removeItem('noir_nameDirty')}catch(e){} }catch(e){} }
   if(!store.get('mig6')){ store.get('tx2',[]).forEach(t=>{ if(!TXQ.some(o=>o.op==='put'&&o.t.id===t.id)) qPush({op:'put',t}) }); store.set('mig6',1) }
   return p }
@@ -316,7 +388,7 @@ function vFin(){
   const inc = real.filter(t=>t.a>0).reduce((s,t)=>s+uah(t),0), exp = -real.filter(t=>t.a<0).reduce((s,t)=>s+uah(t),0);
   const sorted=[...TX].sort((x,y)=>y.ts-x.ts), groups={}; sorted.forEach(t=>(groups[dayLabel(t.ts)]=groups[dayLabel(t.ts)]||[]).push(t));
   const list = Object.entries(groups).map(([d,ts])=>{ const sum=ts.filter(t=>!t.debt).reduce((s,t)=>s+uah(t),0);
-    return `<div class="dh"><span>${d}</span><b>${sum>=0?'+':'−'}${fmt(Math.abs(sum))} ₴</b></div>`+ts.map(t=>{const c=CAT[t.k];
+    return `<div class="dh"><span>${d}</span><b>${sum>=0?'+':'−'}${fmt(Math.abs(sum))} ₴</b></div>`+ts.map(t=>{const c=catInfo(t.k);
       const sub=[t.debt?(t.a>0?'Мне должны':'Я должен')+(t.who?' · '+esc(t.who):''):'', t.n?esc(t.n):(t.src||'')].filter(Boolean).join(' · ');
       return `<button class="tr" style="width:100%;text-align:left" onclick="openSheet(${t.id})"><div class="ti" style="background:${t.debt?'#E4DCCD':c[2]};color:${c[3]||'#353535'}">${t.debt?'🤝':c[0]}</div><div style="flex:1;min-width:0"><b>${t.debt?'Долг':c[1]}</b>${sub?`<small>${sub}</small>`:''}</div><div class="ta ${t.a<0?'m':''}">${t.a>0?'+':'−'}${money(Math.abs(t.a),t.cur||'UAH')}</div></button>`}).join('')}).join('');
   return `${topBar()}<h1 class="ttl">Финансы</h1>
@@ -364,15 +436,16 @@ function vPro(){
 let sh={};
 const pad2=n=>String(n).padStart(2,'0');
 function openSheet(id){ const t=id?TX.find(x=>x.id===id):null;
-  sh = t ? {id, mode:t.a<0?'exp':'inc', expr:String(Math.abs(t.a)), cat:t.k, note:t.n||'', ts:t.ts, cur:t.cur||'UAH', debt:!!t.debt, who:t.who||'', menu:false}
-         : {id:null, mode:'exp', expr:'0', cat:'food', note:'', ts:Date.now(), cur:'UAH', debt:false, who:'', menu:false};
+  sh = t ? {id, mode:t.a<0?'exp':'inc', expr:String(Math.abs(t.a)), cat:t.k, note:t.n||'', ts:t.ts, cur:t.cur||'UAH', debt:!!t.debt, who:t.who||'', menu:false, m0:t.a<0?'exp':'inc'}
+         : {id:null, mode:'exp', expr:'0', cat:'none', note:'', ts:Date.now(), cur:'UAH', debt:false, who:'', menu:false};
   drawSheet(); $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
 function closeSheet(){ $('#dim').classList.remove('on'); $('#sheet').classList.remove('on') }
 function calc(e){ const x=e.replace(/×/g,'*').replace(/÷/g,'/').replace(/−/g,'-').replace(/,/g,'.').replace(/[^0-9.+\-*/]/g,'').replace(/[+\-*/.]+$/,'');
   if(!x) return 0; try{ const v=Function('"use strict";return ('+x+')')(); return isFinite(v)?Math.max(0,Math.round(v*100)/100):0 }catch(_){ return 0 } }
 const shAmt = () => /[+−×÷]/.test(sh.expr.slice(1)) ? sh.expr.replace(/,/g,',') : (sh.expr==='0'?'0':sh.expr);
 function drawSheet(){
-  const cats = sh.mode==='exp'?EXP_CATS:INC_CATS; if(!cats.includes(sh.cat)) sh.cat=cats[0];
+  const cats = ['none', ...UCATS.filter(c=>!c.del&&c.t===sh.mode).map(c=>c.id)];
+  if(!cats.includes(sh.cat)){ if(sh.id&&sh.cat&&(CAT[sh.cat]||UCATS.some(c=>c.id===sh.cat))&&sh.mode===sh.m0) cats.splice(1,0,sh.cat); else sh.cat='none' }
   const isExpr=/[+−×÷]/.test(sh.expr.slice(1));
   $('#sheetIn').innerHTML = `<div class="grab"></div>
   <div style="display:flex;justify-content:space-between;align-items:center;position:relative">
@@ -387,7 +460,11 @@ function drawSheet(){
   ${sh.cm?`<div class="menu" style="left:0;right:0;top:52px">${Object.keys(CUR).map(c=>`<button onclick="sh.cur='${c}';sh.cm=false;drawSheet()">${c===sh.cur?'✓ ':''}${{UAH:'₴ Гривна',USD:'$ Доллар',EUR:'€ Евро',USDT:'USDT'}[c]}</button>`).join('')}</div>`:''}</div>
   ${sh.debt?`<input class="note" placeholder="${sh.mode==='exp'?'Кому я должен':'Кто мне должен'}" maxlength="30" value="${esc(sh.who)}" oninput="sh.who=this.value">`:''}
   <input class="note" placeholder="Заметка" maxlength="60" value="${esc(sh.note)}" oninput="sh.note=this.value">
-  ${sh.debt?'':`<div class="cats" style="margin-top:8px">${cats.map(k=>`<button class="cat ${k===sh.cat?'on':''}" style="background:${CAT[k][2]};color:${CAT[k][3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${CAT[k][0]}</button>`).join('')}</div><div class="cl">${CAT[sh.cat][1]}</div>`}
+  ${sh.debt?'':sh.nc?`<div class="ncat"><div class="nr"><div class="ne" id="ncE" style="background:${CPAL[UCATS.length%CPAL.length]}">${sh.nc.e}</div><input id="ncN" maxlength="20" placeholder="Название, например «Такси»" value="${esc(sh.nc.n)}" oninput="ncType(this.value)" autocomplete="off"></div>
+     <div class="es" id="ncS">${ncSug(aiEmoji(sh.nc.n).sug)}</div><div class="ai" id="ncAi">🤖 Впишите название — ИИ подберёт значок</div>
+     <div class="bt"><button style="background:#efe8da" onclick="sh.nc=null;drawSheet()">Отмена</button><button style="background:var(--G);color:var(--C)" onclick="addCat()">Добавить</button></div></div>`
+   :`<div class="cats" style="margin-top:8px">${cats.map(k=>{ const c=catInfo(k); return `<button class="cat ${k===sh.cat?'on':''}" style="background:${c[2]};color:${c[3]||'#353535'}" onclick="sh.cat='${k}';drawSheet()">${c[0]}</button>` }).join('')}<button class="cat add" onclick="newCat()">＋</button></div>
+     <div class="cl">${esc(catInfo(sh.cat)[1])}${/^u\d/.test(sh.cat)?` <button style="font-size:12px;opacity:.5;margin-left:6px" onclick="delCat('${sh.cat}')">🗑</button>`:''}</div>`}
   <div class="kp4">${['1','2','3','+','4','5','6','−','7','8','9','×',',','0','⌫','÷'].map(x=>`<button class="k ${'+−×÷'.includes(x)?'op':''}" onclick="key('${x}')">${x}</button>`).join('')}</div>
   <button class="gbtn" onclick="saveTx()">Сохранить</button>`;
 }
@@ -398,8 +475,7 @@ function key(x){ hap(); let e=sh.expr;
   else e = (e==='0'?'':e)+x;
   if(e.length>20) return; sh.expr=e; drawSheet() }
 function saveTx(){ const a=calc(sh.expr); if(!a){ toast('Введите сумму'); return }
-  const rec={id:sh.id||Date.now(), ts:sh.ts, k:sh.debt?(sh.mode==='exp'?'food':'bud'):sh.cat, n:sh.note.trim(), a:sh.mode==='exp'?-a:a, cur:sh.cur, debt:sh.debt, who:sh.who.trim()};
-  if(sh.debt) rec.k = sh.mode==='exp'?'gift':'gift';
+  const rec={id:sh.id||Date.now(), ts:sh.ts, k:sh.debt?'none':sh.cat, n:sh.note.trim(), a:sh.mode==='exp'?-a:a, cur:sh.cur, debt:sh.debt, who:sh.who.trim()};
   const i=TX.findIndex(t=>t.id===rec.id); if(i>=0){ rec.src=TX[i].src; TX[i]=rec } else TX.push(rec);
   store.set('tx2',TX); qPush({op:'put',t:rec}); closeSheet(); hap('medium'); render(); toast('Сохранено ✓'); syncTx() }
 function syncTx(){ flushQ().then(ok=>{ if(!ok&&API) toast('Сохранено на телефоне — отправлю в бот, когда будет связь'); if(tab==='fin') render(true) }) }
@@ -416,7 +492,7 @@ function tog(k,d){ const v=!store.get(k,d); store.set(k,v); hap(); render(true);
   api('/api/settings',{[k==='showRating'?'show_rating':'notif']:v}).then(j=>{ setProf(j.profile); RAT.at=0; render(true) })
     .catch(e=>{ store.set(k,!v); render(true); toast(e.message) }) }
 function delData(){ const go=async()=>{ if(API){ try{ await api('/api/delete',{}) }catch(e){ toast(e.message); return } }
-    ['name','tx2','showRating','notif','txq','mig6','nameDirty'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
+    ['name','tx2','showRating','notif','txq','mig6','nameDirty','ucats','catsDirty'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
   if (tg && tg.showConfirm) tg.showConfirm('Удалить все ваши данные из Noir P2P?', ok=>ok&&go()); else go() }
 function openLink(u){ if(tg&&tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u) }
 function exitApp(){ if(tg) tg.close(); }
