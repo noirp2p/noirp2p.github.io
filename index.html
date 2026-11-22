@@ -145,9 +145,9 @@ async function api(path, body){
   if(!API) throw new Error('Откройте приложение заново кнопкой «Открыть» в чате бота');
   let r, j={};
   try{ r = await fetch(API+path, {method:body?'POST':'GET', headers:Object.assign({'X-Init-Data':(tg&&tg.initData)||''}, /\.ngrok(-free)?\.(app|dev)$/.test(new URL(API).hostname)?{'ngrok-skip-browser-warning':'1'}:{}, body?{'Content-Type':'application/json'}:{}), body:body?JSON.stringify(body):undefined}) }
-  catch(e){ throw new Error('Бот сейчас не на связи. Попробуйте позже или откройте приложение заново.') }
+  catch(e){ const x=new Error('Бот сейчас не на связи. Попробуйте позже или откройте приложение заново.'); x.net=true; throw x }
   try{ j = await r.json() }catch(e){}
-  if(!r.ok || !j.ok) throw new Error(j.error || 'Бот сейчас не на связи. Попробуйте позже.');
+  if(!r.ok || !j.ok){ const x=new Error(j.error || 'Бот сейчас не на связи. Попробуйте позже.'); x.status=r.status; x.net=!j.error; throw x }
   return j }
 const DAYMS=864e5, dayStart = d => { const x=new Date(d); x.setHours(0,0,0,0); return +x };
 function perRange(k){ const t=dayStart(Date.now());
@@ -189,8 +189,36 @@ const money = (v,cur='UAH') => (cur==='USDT'? fmt(v)+' USDT' : fmt(v)+' '+CUR[cu
 function dayLabel(ts){ const d=new Date(ts); d.setHours(0,0,0,0); const t=new Date(); t.setHours(0,0,0,0); const diff=Math.round((t-d)/864e5);
   return diff===0?'Сегодня':diff===1?'Вчера':d.getDate()+' '+MON[d.getMonth()] }
 // Пока Binance не подключён и нет сервера — всё по нулям (реальные цифры появятся на шаге 5)
-const PEOPLE = [];
-const ME = {place:'—', pts:0, streak:1};
+// ---------- живые данные (шаг 6): профиль, очки, рейтинг, финансы на сервере бота ----------
+const ME = {place:'—', pts:0, streak:0};
+const RAT = {d:null, at:0, err:null, p:0};
+const plDays = n => n%10===1&&n%100!==11?'день':(n%10>=2&&n%10<=4&&(n%100<10||n%100>=20)?'дня':'дней');
+function setProf(p){ if(!p) return; ME.place=p.place||'—'; ME.pts=p.pts||0; ME.streak=p.streak||0;
+  if(p.name) store.set('name',p.name); store.set('showRating',!!p.show_rating); store.set('notif',!!p.notif) }
+let TXQ = store.get('txq', []);   // операции, которые ещё не дошли до бота (нет связи)
+function qPush(o){ TXQ.push(o); store.set('txq',TXQ) }
+let FLUSH=null;
+function flushQ(){ if(!API||!BN.profile) return Promise.resolve(false); if(FLUSH) return FLUSH;
+  FLUSH=(async()=>{ try{ while(TXQ.length){ const o=TXQ[0];
+      try{ if(o.op==='del'){ await api('/api/tx/del',{id:o.id}); TXQ.splice(0,1) }
+           else { let n=0; while(n<TXQ.length&&n<50&&TXQ[n].op==='put') n++; await api('/api/tx',{items:TXQ.slice(0,n).map(x=>x.t)}); TXQ.splice(0,n) } }
+      catch(e){ if(e.net||[401,404,405,413,429].includes(e.status)||e.status>=500) return false;  // нет связи — отправим позже
+                TXQ.splice(0,1); toast(e.message) }                                         // бот отказал — не застреваем
+      store.set('txq',TXQ) } return true } finally{ FLUSH=null } })();
+  return FLUSH }
+async function loadTx(){ if(!(await flushQ())) return;
+  const j=await api('/api/tx'); const put={}, del={}; TXQ.forEach(o=>o.op==='put'?put[o.t.id]=o.t:del[o.id]=1);
+  TX=j.items.filter(t=>!del[t.id]&&!put[t.id]).concat(Object.values(put)); store.set('tx2',TX); if(!T&&!$('#splash')) render(true) }
+async function migrate(p){ // один раз: переносим то, что раньше хранилось только на телефоне
+  const s={}, n=store.get('name');
+  if(n&&(!p.name||store.get('nameDirty'))&&n!==p.name) s.name=n;
+  if(!store.get('mig6')){ if(store.get('showRating',true)===false&&p.show_rating) s.show_rating=false; if(store.get('notif',true)===false&&p.notif) s.notif=false }
+  if(Object.keys(s).length){ try{ p=(await api('/api/settings',s)).profile; try{localStorage.removeItem('noir_nameDirty')}catch(e){} }catch(e){} }
+  if(!store.get('mig6')){ store.get('tx2',[]).forEach(t=>{ if(!TXQ.some(o=>o.op==='put'&&o.t.id===t.id)) qPush({op:'put',t}) }); store.set('mig6',1) }
+  return p }
+function loadRat(force){ if(!API||RAT.p||(!force&&RAT.at&&Date.now()-RAT.at<60000)) return; RAT.p=1;
+  api('/api/rating').then(j=>{ RAT.d=j; RAT.err=null; if(j.me){ ME.place=j.me.place; ME.pts=j.me.pts } }).catch(e=>{ RAT.err=e.message })
+    .finally(()=>{ RAT.p=0; RAT.at=Date.now(); if(tab==='rat'&&!T) render(true) }) }
 
 // ---------- проверка имени ----------
 const NAMES = new Set(('станислав стас александр саша алексей артем артём андрей антон богдан борис вадим валентин валерий василий виктор виталий владимир владислав влад вячеслав глеб григорий даниил данил денис дмитрий дима евгений егор иван игорь илья кирилл константин лев леонид максим макс марк матвей михаил миша назар никита николай олег павел петр пётр роман руслан сергей степан тарас тимур тимофей федор фёдор юрий ярослав ярик остап орест захар данило дмитро олександр олексій андрій богдан василь віталій володимир євген ігор ілля кирило максим микола михайло назар олег павло петро роман сергій тарас юрій ярослав '+
@@ -293,24 +321,35 @@ function vFin(){
   return `${topBar()}<h1 class="ttl">Финансы</h1>
   <div data-t="total" style="text-align:center;margin-top:8px"><span style="font-size:14px;opacity:.6">Итог за этот месяц</span><div style="font-size:46px;font-weight:800;letter-spacing:-1px;margin-top:4px">${inc-exp<0?"−":""}${fmt(Math.abs(inc-exp))} ₴</div>
   <div style="display:flex;justify-content:center;gap:22px;font-weight:700;font-size:17px"><span>▲ ${fmt(inc)} ₴</span><span style="color:var(--T)">▼ ${fmt(exp)} ₴</span></div></div>
+  ${TXQ.length&&API?`<button class="lb" style="display:block;margin:8px auto 0;font-size:12px" onclick="syncTx()">⏳ ${TXQ.length} ${TXQ.length===1?'операция ждёт':'операций ждут'} отправки в бот · повторить</button>`:''}
   <div data-t="list">${list||'<div class="card lt" style="text-align:center;padding:22px 16px;margin-top:18px"><div style="font-size:30px">💸</div><b style="display:block;margin-top:6px">Пока нет операций</b><div class="lb" style="margin-top:4px">Нажмите «＋», чтобы добавить расход или доход</div></div>'}</div><div style="height:60px"></div>`;
 }
 function vRat(){
-  const show = store.get('showRating', true);
-  return `${topBar()}<h1 class="ttl">Рейтинг</h1><div class="ssn" data-t="season"><span>🏆 Сезон 2026</span><small>сброс 1 января · призы скоро</small></div>
-  <div class="podw" data-t="podium">${[2,1,3].map(k=>`<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:#efe8da;color:#b9ad9a">?</div><div class="pn" style="opacity:.5">свободно</div><div class="pp">0 очк.</div><div class="pod" style="height:${({1:118,2:88,3:70})[k]}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>`).join('')}</div>
-  <div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">Рейтинг заполнится, когда в боте появятся участники</span></div><div style="height:70px"></div>
-  ${show?`<div class="mine"><div class="in" data-t="mine"><div class="pl">${ME.place}</div>${avatar(40,'#353535')}<div><b>Вы · ${esc(store.get('name')||nickName)}</b><small>сезон только начался</small></div><div class="pts">${fmt(ME.pts)}<small>очков</small></div></div></div>`:''}`;
+  loadRat(); const R=RAT.d, top=R?R.top:[], yr=R?R.year:new Date().getFullYear();
+  const lav=(e,sz,ring)=> e.me?avatar(sz,ring):`<div class="av" style="width:${sz}px;height:${sz}px;font-size:${sz*.4}px;${ring?'box-shadow:0 0 0 3px '+ring:''}">${esc((e.nick.replace('@','')||'?')[0].toUpperCase())}</div>`;
+  const nm = e => esc(e.me?(store.get('name')||e.nick):e.nick)+(e.hidden?' 🙈':'');
+  const pod = [2,1,3].map(k=>{ const e=top[k-1], h=({1:118,2:88,3:70})[k];
+    return `<div class="pc">${k===1?'<div style="font-size:20px">👑</div>':'<div style="height:24px"></div>'}${e?lav(e,k===1?58:48,k===1?'var(--P)':''):`<div class="av" style="width:${k===1?58:48}px;height:${k===1?58:48}px;font-size:20px;background:#efe8da;color:#b9ad9a">?</div>`}<div class="pn"${e?'':' style="opacity:.5"'}>${e?nm(e):'свободно'}</div><div class="pp">${e?fmt(e.pts):0} очк.</div><div class="pod" style="height:${h}px;background:${k===1?'var(--P)':'var(--G)'};color:${k===1?'var(--G)':'var(--C)'};animation-delay:${k*.12}s">${k}</div></div>` }).join('');
+  const list = top.slice(3).map(e=>`<div class="lr"${e.me?' style="background:var(--P);border-color:var(--P)"':''}><div class="pl">${e.place}</div>${lav(e,40,e.me?'#353535':'')}<div style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><b>${nm(e)}</b></div><div class="pts">${fmt(e.pts)}<small>очков</small></div></div>`).join('');
+  const info = !R ? (RAT.err&&!RAT.p ? `<div class="card lt" style="text-align:center;padding:18px 16px"><b>Нет связи с ботом</b><div class="lb" style="margin-top:4px">${esc(RAT.err)}</div><button class="gbtn" onclick="loadRat(true);render(true)">Повторить</button></div>`
+      : `<div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">${API?'Загружаю рейтинг…':'Откройте приложение кнопкой «Открыть» в чате бота'}</span></div>`)
+    : top.length<2 ? `<div class="card lt" style="text-align:center;padding:18px 16px"><span class="lb">Участников пока мало — рейтинг заполнится, когда в боте появятся другие игроки</span></div>` : '';
+  const me = R&&R.me;
+  return `${topBar()}<h1 class="ttl">Рейтинг</h1><div class="ssn" data-t="season"><span>🏆 Сезон ${yr}</span><small>сброс 1 января · призы скоро</small></div>
+  <div class="podw" data-t="podium">${pod}</div>
+  ${R&&R.admin?`<div class="lb" style="margin:10px 4px 0;font-size:12px">👁 Вы админ: видите всех, скрытые отмечены 🙈</div>`:''}
+  <div data-t="list">${list}</div>${info}<div style="height:${me?90:20}px"></div>
+  ${me?`<div class="mine"><div class="in" data-t="mine"><div class="pl">${me.place}</div>${avatar(40,'#353535')}<div style="min-width:0"><b>Вы · ${esc(store.get('name')||nickName)}</b><small>${store.get('showRating',true)?'место '+me.place+' из '+R.total:'вас видите только вы'}</small></div><div class="pts">${fmt(me.pts)}<small>очков</small></div></div></div>`:''}`;
 }
 function vPro(){
   const sw = (k,d) => `<span class="sw ${store.get(k,d)?'on':''}"><i></i></span>`;
   return `${topBar()}<h1 class="ttl">Профиль</h1>
   <div class="card" data-t="pcard" style="display:flex;align-items:center;gap:14px">${avatar(64)}<div style="min-width:0"><div style="font-size:20px;font-weight:800">${esc(store.get('name')||U.first_name||'')}</div><div class="lb">${esc(nickName)}</div>
-  <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${ME.streak===1?'день':'дней'}</span></div></div></div>
+  <div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><span class="ch pk">🏆 #${ME.place} · ${fmt(ME.pts)} очк.</span><span class="ch">🔥 ${ME.streak} ${plDays(ME.streak)}</span></div></div></div>
   <div class="gt">Binance</div><div class="grp" data-t="bin">${BN.offline?`<button class="it" onclick="retryMe()"><span class="ie">📡</span><span><b>Нет связи с ботом</b><small>нажмите, чтобы повторить</small></span><span class="ir">›</span></button>`:BN.connected?`<button class="it" onclick="discBn()"><span class="ie">✅</span><span><b>Binance подключён</b><small>только чтение · зашифрован${BN.last_sync?' · обновлено '+hhmm(BN.last_sync*1000):''}</small></span><span class="ir">›</span></button><button class="it" onclick="resync()"><span class="ie">🔄</span><span><b>Пересчитать заново</b><small>история с ${BN.track_from?new Date(BN.track_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+hhmm(BN.track_from):'начала'} · загрузить заново</small></span><span class="ir">›</span></button>`
      :`<button class="it" onclick="openBinance()"><span class="ie">🔑</span><span><b>Подключить API-ключ</b><small>только чтение · безопасно</small></span><span class="ir">›</span></button>`}</div>
   <div class="gt">Настройки</div><div class="grp" data-t="set">
-   <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><b>Показывать меня в рейтинге</b>${sw('showRating',true)}</button>
+   <button class="it" onclick="tog('showRating',true)"><span class="ie">🏆</span><span><b>Показывать меня в рейтинге</b><small>${store.get('showRating',true)?'другие видят ваш ник и очки':'очки копятся, но другим вас не видно'}</small></span>${sw('showRating',true)}</button>
    <button class="it" onclick="tog('notif',true)"><span class="ie">🔔</span><b>Уведомления</b>${sw('notif',true)}</button>
    <button class="it" onclick="openStart()"><span class="ie">💰</span><span><b>Мой бюджет</b><small>${(BN.start_uah||BN.start_usdt)?fmt(Math.round((BN.start_uah||0)+(BN.start_usdt||0)*(BN.start_price||0)))+' ₴'+(BN.profit_from?' · с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'}):'')+' · сбросить':'не указан · ввести'}</small></span><span class="ir">›</span></button></div>
   <div class="gt">Помощь</div><div class="grp" data-t="help">
@@ -361,17 +400,22 @@ function saveTx(){ const a=calc(sh.expr); if(!a){ toast('Введите сумм
   const rec={id:sh.id||Date.now(), ts:sh.ts, k:sh.debt?(sh.mode==='exp'?'food':'bud'):sh.cat, n:sh.note.trim(), a:sh.mode==='exp'?-a:a, cur:sh.cur, debt:sh.debt, who:sh.who.trim()};
   if(sh.debt) rec.k = sh.mode==='exp'?'gift':'gift';
   const i=TX.findIndex(t=>t.id===rec.id); if(i>=0){ rec.src=TX[i].src; TX[i]=rec } else TX.push(rec);
-  store.set('tx2',TX); closeSheet(); hap('medium'); render(); toast('Сохранено ✓') }
+  store.set('tx2',TX); qPush({op:'put',t:rec}); closeSheet(); hap('medium'); render(); toast('Сохранено ✓'); syncTx() }
+function syncTx(){ flushQ().then(ok=>{ if(!ok&&API) toast('Сохранено на телефоне — отправлю в бот, когда будет связь'); if(tab==='fin') render(true) }) }
 function repeatTx(){ const a=calc(sh.expr); if(!a){ toast('Введите сумму'); return } sh.id=null; sh.ts=Date.now(); sh.menu=false; saveTx(); toast('Повторено на сегодня ✓') }
-function delTx(){ const go=()=>{ TX=TX.filter(t=>t.id!==sh.id); store.set('tx2',TX); closeSheet(); render(); toast('Удалено') };
+function delTx(){ const go=()=>{ const id=sh.id; TX=TX.filter(t=>t.id!==id); store.set('tx2',TX); TXQ=TXQ.filter(o=>!(o.op==='put'&&o.t.id===id)); qPush({op:'del',id}); closeSheet(); render(); toast('Удалено'); syncTx() };
   if(tg&&tg.showConfirm) tg.showConfirm('Удалить эту операцию?',ok=>ok&&go()); else go() }
 
 // ---------- действия ----------
 function saveName(){ const v=$('#nameIn').value, e=checkName(v); if(e){ $('#nameErr').textContent=e; try{tg.HapticFeedback.notificationOccurred('error')}catch(_){}; return }
-  const n=v.trim(); store.set('name', n[0].toUpperCase()+n.slice(1).toLowerCase()); hap('medium'); render(); toast('Приятно познакомиться 👋') }
-function tog(k,d){ store.set(k,!store.get(k,d)); hap(); render() }
+  const n=v.trim(), nm=n[0].toUpperCase()+n.slice(1).toLowerCase(); store.set('name', nm); store.set('nameDirty',1); hap('medium'); render(); toast('Приятно познакомиться 👋');
+  if(API) api('/api/settings',{name:nm}).then(()=>{ try{localStorage.removeItem('noir_nameDirty')}catch(e){} }).catch(()=>{}) }
+function tog(k,d){ const v=!store.get(k,d); store.set(k,v); hap(); render(true);
+  if(!API) return;
+  api('/api/settings',{[k==='showRating'?'show_rating':'notif']:v}).then(j=>{ setProf(j.profile); RAT.at=0; render(true) })
+    .catch(e=>{ store.set(k,!v); render(true); toast(e.message) }) }
 function delData(){ const go=async()=>{ if(API){ try{ await api('/api/delete',{}) }catch(e){ toast(e.message); return } }
-    ['name','tx2','showRating','notif'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
+    ['name','tx2','showRating','notif','txq','mig6','nameDirty'].forEach(k=>{try{localStorage.removeItem('noir_'+k)}catch(e){}}); location.reload() };
   if (tg && tg.showConfirm) tg.showConfirm('Удалить все ваши данные из Noir P2P?', ok=>ok&&go()); else go() }
 function openLink(u){ if(tg&&tg.openTelegramLink) tg.openTelegramLink(u); else window.open(u) }
 function exitApp(){ if(tg) tg.close(); }
@@ -469,7 +513,7 @@ function render(quiet){
 function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
 function loadMe(){ if(!API){ BN.offline=true; return }
-  api('/api/me').then(j=>{ Object.assign(BN,j,{loaded:true,offline:false}) }).catch(()=>{ BN.offline=true })
+  api('/api/me?tz='+new Date().getTimezoneOffset()).then(async j=>{ Object.assign(BN,j,{loaded:true,offline:false}); if(j.profile){ setProf(await migrate(j.profile)); loadTx().catch(()=>{}) } }).catch(()=>{ BN.offline=true })
     .finally(()=>{ if(!$('#splash')&&!T) render(true) }) }
 function retryMe(){ hap(); BN.offline=false; render(true); loadMe() }
 loadMe();
