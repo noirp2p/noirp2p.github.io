@@ -153,7 +153,7 @@ const st = k => STAT[k] && STAT[k].d;
 function ensure(k){ if(!BN.connected || PEND[k] || (STAT[k] && Date.now()-STAT[k].at<60000)) return;
   PEND[k]=1; const [a,b]=perRange(k);
   api(`/api/stats?from=${a}&to=${b}&tz=${new Date().getTimezoneOffset()}`).then(j=>{ STAT[k]={d:j,at:Date.now()};
-      Object.assign(BN,{last_sync:j.last_sync,sync_error:j.sync_error,start_usdt:j.start_usdt,start_price:j.start_price}); if(j.connected===false){ BN.connected=false } })
+      Object.assign(BN,{last_sync:j.last_sync,sync_error:j.sync_error,start_usdt:j.start_usdt,start_price:j.start_price,start_uah:j.start_uah,track_from:j.track_from,profit_from:j.profit_from}); if(j.connected===false){ BN.connected=false } })
     .catch(e=>{ STAT[k]={d:null,err:e.message,at:Date.now()} })
     .finally(()=>{ delete PEND[k]; if(!T) render(true) }) }
 const OFFLINE_CARD = () => `<div class="card lt" data-t="chart" style="text-align:center;padding:22px 16px"><div style="font-size:34px">📡</div><b style="font-size:17px;display:block;margin-top:6px">Нет связи с ботом</b><div class="lb" style="margin:6px auto 0;max-width:270px">${API?'Бот сейчас не в сети или сменил адрес. Закройте приложение и откройте его кнопкой «Открыть» в чате бота.':'Откройте приложение кнопкой «Открыть» в чате бота.'}</div>${API?'<button class="gbtn" onclick="retryMe()">Повторить</button>':''}</div>`;
