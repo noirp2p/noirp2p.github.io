@@ -94,6 +94,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer}
 .mine .in.glass small{color:var(--B);opacity:.9}
 .lr.glass{background:rgba(40,40,40,.82);color:var(--C);border-color:rgba(255,255,255,.08);box-shadow:inset 0 1px 0 rgba(255,255,255,.07)}.lr.glass .pl{color:var(--B);opacity:.8}.lr.glass .pts small{color:var(--B)}
 .hid{display:inline-block;font-size:11px;font-weight:600;color:var(--B);background:rgba(255,255,255,.08);border-radius:8px;padding:1px 7px;margin-left:6px;vertical-align:2px}
+.adm .sg{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:10px}.adm .sg div{background:#4a4a4a;border-radius:14px;padding:10px}.adm .sg b{display:block;font-size:22px}.adm .sg small{font-size:11px;color:var(--B)}
+.adm .bars{display:flex;align-items:flex-end;gap:6px;height:70px;margin-top:12px}.adm .bars div{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%;font-size:10px;color:var(--B)}.adm .bars i{display:block;width:100%;background:var(--P);border-radius:6px 6px 2px 2px;min-height:3px;margin-bottom:3px}
+.adm textarea.fld{min-height:84px;resize:vertical}
+.ur{display:flex;align-items:center;gap:10px;background:#fff;border:1px solid var(--L);border-radius:16px;padding:8px 12px 8px 8px;margin-top:6px;width:100%;text-align:left}.ur.ban{opacity:.55;background:#f3ede3}.ur small{display:block;font-size:12px;opacity:.6}.ur .tg{font-size:11px;margin-left:4px}
 .gt{font-size:12px;font-weight:700;opacity:.5;margin:14px 6px 5px;text-transform:uppercase;letter-spacing:.5px}
 .grp{background:#fff;border:1px solid var(--L);border-radius:18px;overflow:hidden}
 .it{display:flex;align-items:center;gap:12px;padding:10px 14px 10px 10px;border-top:1px solid #f0eadf;width:100%;text-align:left}.it:first-child{border-top:0}.it b{font-size:14px}.it small{display:block;font-size:12px;opacity:.55}
@@ -195,7 +199,7 @@ const hhmm = ts => { const d=new Date(ts); return pad2(d.getHours())+':'+pad2(d.
 
 const IC = {home:'<path d="M3 11 12 4l9 7v9a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z"/>',p2p:'<path d="M4 8h13l-3-3M20 16H7l3 3"/>',
 fin:'<rect x="3" y="6" width="18" height="13" rx="2"/><path d="M16 12.5h2M3 10h18"/>',rat:'<path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0zM7 6H4a3 3 0 0 0 3 4M17 6h3a3 3 0 0 1-3 4"/>',
-pro:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>'};
+pro:'<circle cx="12" cy="8" r="4"/><path d="M4 21a8 8 0 0 1 16 0"/>',adm:'<path d="M12 3l8 3v6c0 4.5-3.4 8.3-8 9-4.6-.7-8-4.5-8-9V6z"/><path d="M9 12l2 2 4-4"/>'};
 const svg = (k,s=24) => `<svg width="${s}" height="${s}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">${IC[k]}</svg>`;
 const TABS = [['home','Home'],['p2p','P2P'],['fin','Финансы'],['rat','Рейтинг'],['pro','Профиль']];
 
@@ -278,7 +282,7 @@ function showAwards(){ if(!AWQ.length||$('.aw')) return; if($('#splash')||T){ se
   const L=AWQ; AWQ=[]; const tot=L.reduce((a,x)=>a+x.pts,0); if(!tot) return;
   const row = x => x.kind==='day' ? ['🔥','За вход сегодня','Серия: '+x.streak+' '+plDays(x.streak)+' подряд']
     : x.kind==='api' ? ['🔑','За подключение Binance API','один раз — навсегда']
-    : x.kind==='turn' ? ['📈','Оборот за '+MONN[+x.key.slice(5,7)-1],'закуп больше '+fmt(x.level)+' ₴'] : ['⭐','Бонус',''];
+    : x.kind==='turn' ? ['📈','Оборот за '+MONN[+x.key.slice(5,7)-1],'закуп больше '+fmt(x.level)+' ₴'] : ['🎁','Бонус от админа',x.reason||''];
   document.body.insertAdjacentHTML('beforeend',`<div class="aw" onclick="hideAw()"><div class="in"><div class="big">+<span class="cnt" data-v="${tot}">0</span><small>${tot%10===1&&tot%100!==11?'очко':(tot%10>=2&&tot%10<=4&&(tot%100<10||tot%100>=20)?'очка':'очков')} в рейтинг 🏆</small></div>
     ${L.map((x,i)=>{ const [ic,t,sub]=row(x); return `<div class="ln" style="animation-delay:${.35+i*.12}s"><i>${ic}</i><span>${t}${sub?`<small>${sub}</small>`:''}</span><b>+${x.pts}</b></div>` }).join('')}</div></div>`);
   const c=$('.aw .cnt'), t0=performance.now(); const f=t=>{ const k=Math.min(1,(t-t0)/900); c.textContent=Math.round(tot*(1-Math.pow(1-k,3))); if(k<1) requestAnimationFrame(f) }; setTimeout(()=>requestAnimationFrame(f),350);
@@ -453,6 +457,48 @@ function vPro(){
   <button class="del" data-t="del" onclick="delData()">Удалить мои данные</button>`;
 }
 
+// ---------- заглушка: бан или техработы ----------
+let BLOCK=null;
+const vBlock = () => `<div style="min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 24px"><div style="font-size:56px">${BLOCK.ic}</div><b style="font-size:20px;margin-top:10px">${BLOCK.ic==='🛠'?'Идут техработы':'Доступ закрыт'}</b><div class="lb" style="margin-top:8px;max-width:300px;color:#8a7f72">${esc(BLOCK.t)}</div>${BLOCK.ic==='🛠'?'<button class="gbtn" style="max-width:260px" onclick="retryMe()">Проверить снова</button>':''}</div>`;
+
+// ---------- Админ панель (только для Станислава) ----------
+const ADM={st:null, users:null, q:'', at:0, p:0};
+function loadAdm(force){ if(!BN.admin||ADM.p||(!force&&ADM.at&&Date.now()-ADM.at<30000)) return; ADM.p=1;
+  Promise.all([api('/api/admin/stats'), api('/api/admin/users?q='+encodeURIComponent(ADM.q))]).then(([a,b])=>{ ADM.st=a; ADM.users=b.users })
+    .catch(e=>toast(e.message)).finally(()=>{ ADM.p=0; ADM.at=Date.now(); if(tab==='adm'&&!T) render(true) }) }
+const ago = d => { if(!d) return 'не заходил'; const t=new Date(); t.setHours(0,0,0,0); const x=new Date(d+'T00:00'); const n=Math.round((t-x)/864e5); return n<=0?'сегодня':n===1?'вчера':n+' '+plDays(n)+' назад' };
+const uRow = u => `<button class="ur${u.banned?' ban':''}" onclick="openUser(${u.id})"><div class="av" style="width:40px;height:40px;font-size:16px">${esc((u.nick.replace('@','')||'?')[0].toUpperCase())}</div><div style="min-width:0;flex:1;overflow:hidden"><b style="font-size:14px">${esc(u.nick)}</b>${u.binance?'<span class="tg">🔑</span>':''}${u.hidden?'<span class="tg">🙈</span>':''}${u.banned?'<span class="tg">🚫</span>':''}<small>${u.name?esc(u.name)+' · ':''}вход ${ago(u.last_visit)}</small></div><div class="pts">${fmt(u.pts)}<small>очков</small></div></button>`;
+function admSearch(v){ ADM.q=v; clearTimeout(admSearch.t); admSearch.t=setTimeout(()=>api('/api/admin/users?q='+encodeURIComponent(v)).then(j=>{ ADM.users=j.users; const el=$('#admU'); if(el) el.innerHTML=j.users.map(uRow).join('')||'<div class="lb" style="text-align:center;margin-top:10px;color:#8a7f72">Никого не нашёл</div>' }).catch(e=>toast(e.message)),300) }
+function vAdm(){ loadAdm(); const S=ADM.st;
+  if(!S) return `${topBar()}<h1 class="ttl">Админ панель</h1><div class="card lt" style="text-align:center;padding:22px"><span class="lb">Загружаю…</span></div>`;
+  const mx=Math.max(1,...S.active.map(d=>d.n)), wd=['вс','пн','вт','ср','чт','пт','сб'], c=S.cast;
+  return `${topBar()}<h1 class="ttl">Админ панель</h1><div class="adm">
+  <div class="card" data-t="ast"><div class="lb">Пользователи</div><div class="sg"><div><b>${fmt(S.total)}</b><small>всего</small></div><div><b>+${fmt(S.new_day)}</b><small>новых за день</small></div><div><b>+${fmt(S.new_week)}</b><small>за неделю</small></div><div><b>${fmt(S.active[6].n)}</b><small>зашли сегодня</small></div><div><b>${fmt(S.binance)}</b><small>с Binance</small></div><div><b>${fmt(S.banned)}</b><small>в бане</small></div></div>
+   <div class="lb" style="margin-top:14px">Заходы за 7 дней</div><div class="bars">${S.active.map(d=>`<div>${d.n}<i style="height:${Math.round(d.n/mx*48)}px"></i>${wd[new Date(d.day+'T00:00').getDay()]}</div>`).join('')}</div></div>
+  <div class="gt">Техработы</div><div class="grp"><button class="it" onclick="admMaint(!ADM.st.maint.on)"><span class="ie">🔧</span><span><b>Закрыть бота на техработы</b><small>${S.maint.on?'бот закрыт для всех, кроме вас':'бот работает для всех'}</small></span><span class="sw ${S.maint.on?'on':''}"><i></i></span></button></div>
+   <input class="fld" id="mtT" maxlength="300" value="${esc(S.maint.text)}" placeholder="Текст для пользователей">
+  <div class="gt">Рассылка всем</div><textarea class="fld" id="bcT" maxlength="3500" placeholder="Сообщение придёт всем пользователям от бота"></textarea>
+   <button class="gbtn" onclick="admCast()">📣 Отправить всем</button>${c&&c.total?`<div class="lb" style="text-align:center;margin-top:6px;color:#8a7f72">${c.running?'⏳ Отправляю… ':'Последняя рассылка: '}${c.sent} из ${c.total}${c.failed?' · не дошло '+c.failed:''}</div>`:''}
+  <div class="gt">Пользователи</div><input class="fld" placeholder="🔎 Поиск по нику, имени или ID" value="${esc(ADM.q)}" oninput="admSearch(this.value)">
+  <div id="admU">${(ADM.users||[]).map(uRow).join('')}</div><div style="height:20px"></div></div>`;
+}
+function admMaint(on){ const go=()=>api('/api/admin/maint',{on, text:$('#mtT').value}).then(j=>{ ADM.st.maint=j.maint; render(true); toast(on?'🛠 Бот закрыт на техработы':'✅ Бот снова работает для всех') }).catch(e=>toast(e.message));
+  if(on&&tg&&tg.showConfirm) tg.showConfirm('Закрыть бота для всех пользователей?',ok=>ok&&go()); else go() }
+function admCast(){ const t=$('#bcT').value.trim(); if(t.length<2){ toast('Напишите текст рассылки'); return }
+  const go=()=>api('/api/admin/broadcast',{text:t}).then(j=>{ ADM.st.cast=j.cast; $('#bcT').value=''; toast('📣 Рассылка пошла: '+j.cast.total+' получателей'); setTimeout(()=>{ ADM.at=0; loadAdm(true) },4000) }).catch(e=>toast(e.message));
+  if(tg&&tg.showConfirm) tg.showConfirm('Отправить это сообщение всем пользователям?',ok=>ok&&go()); else go() }
+function openUser(id){ const u=(ADM.users||[]).find(x=>x.id===id); if(!u) return;
+  $('#sheetIn').innerHTML=`<div class="grab"></div><div style="display:flex;align-items:center;gap:12px"><div class="av" style="width:52px;height:52px;font-size:20px">${esc((u.nick.replace('@','')||'?')[0].toUpperCase())}</div><div style="min-width:0"><b style="font-size:18px">${esc(u.nick)}</b><div class="lb" style="color:#8a7f72">${u.name?esc(u.name)+' · ':''}ID ${u.id}</div></div><button class="rb2" style="margin-left:auto" onclick="closeSheet()">✕</button></div>
+   <div class="grp" style="margin-top:12px"><div class="it"><span class="ie">🏆</span><b>${fmt(u.pts)} очков</b><small style="margin-left:auto">🔥 ${u.streak} ${plDays(u.streak)}</small></div><div class="it"><span class="ie">📅</span><span><b>Последний вход: ${ago(u.last_visit)}</b><small>в боте с ${new Date(u.created*1000).toLocaleDateString('ru-RU',{day:'numeric',month:'long'})}</small></span></div><div class="it"><span class="ie">🔑</span><b>${u.binance?'Binance подключён':'Binance не подключён'}</b></div>${u.hidden?'<div class="it"><span class="ie">🙈</span><b>Скрыт в рейтинге</b></div>':''}</div>
+   <div class="gt">Очки в рейтинге</div><div class="fl2"><input class="fld" id="apP" inputmode="numeric" placeholder="+50 или −20"><input class="fld" id="apR" maxlength="60" placeholder="За что"></div><button class="gbtn" onclick="admPts(${u.id})">Изменить очки</button>
+   <div class="gt">Доступ</div>${u.banned?`<div class="lb" style="color:#8a7f72">В бане${u.reason?': '+esc(u.reason):''}</div><button class="gbtn" style="background:var(--P);color:var(--G)" onclick="admBan(${u.id},false)">✅ Разбанить</button>`
+     :`<input class="fld" id="abR" maxlength="200" placeholder="Причина бана (увидит пользователь)"><button class="gbtn" style="background:var(--T)" onclick="admBan(${u.id},true)">🚫 Забанить</button>`}<div style="height:10px"></div>`;
+  $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
+function admPts(id){ const v=($('#apP').value||'').replace(/[−–]/g,'-').replace(/\s/g,''); const n=parseInt(v,10); if(!n){ toast('Впишите число, например 50 или −20'); return }
+  api('/api/admin/points',{id,pts:n,reason:$('#apR').value}).then(()=>{ closeSheet(); toast((n>0?'+':'')+n+' очков ✓'); RAT.at=0; loadAdm(true) }).catch(e=>toast(e.message)) }
+function admBan(id,on){ const go=()=>api('/api/admin/ban',{id,ban:on,reason:on?$('#abR').value:''}).then(()=>{ closeSheet(); toast(on?'🚫 Забанен':'✅ Разбанен'); RAT.at=0; loadAdm(true) }).catch(e=>toast(e.message));
+  if(on&&tg&&tg.showConfirm) tg.showConfirm('Забанить пользователя? Он потеряет доступ к боту.',ok=>ok&&go()); else go() }
+
 // ---------- лист добавления / редактирования ----------
 let sh={};
 const pad2=n=>String(n).padStart(2,'0');
@@ -601,9 +647,9 @@ function countUp(){ document.querySelectorAll('.cnt').forEach(e=>{ const v=+e.da
 // ---------- навигация ----------
 let tab = 'home';
 function render(quiet){
-  $('#app').innerHTML = `<div class="view${quiet===true?' q':''}">${({home:vHome,p2p:vP2P,fin:vFin,rat:vRat,pro:vPro})[tab]()}</div>`;
+  $('#app').innerHTML = `<div class="view${quiet===true?' q':''}">${(BLOCK?vBlock:({home:vHome,p2p:vP2P,fin:vFin,rat:vRat,pro:vPro,adm:vAdm})[tab])()}</div>`;
   [...$('.view').children].forEach((c,i)=>c.style.animationDelay=Math.min(i,10)*60+'ms'); if(quiet!==true) countUp();
-  $('#nav').innerHTML = TABS.map(([k,l])=>`<button class="ni ${k===tab?'on':''}" onclick="go('${k}')">${svg(k)}<span>${l}</span></button>`).join('');
+  $('#nav').innerHTML = (BN.admin?TABS.concat([['adm','Админ']]):TABS).map(([k,l])=>`<button class="ni ${k===tab?'on':''}" onclick="go('${k}')">${svg(k)}<span>${l}</span></button>`).join('');
   document.querySelectorAll('.fabs').forEach(e=>e.remove());
   if (tab==='fin') document.body.insertAdjacentHTML('beforeend','<div class="fabs"><button class="fb" onclick="openSheet()">＋</button></div>');
   if (tab==='p2p' && custom){ const c=$('.chips'); if(c) c.scrollLeft=c.scrollWidth }
@@ -611,7 +657,7 @@ function render(quiet){
 function go(k,force){ if(k===tab&&!force) return; tab=k; hap(); window.scrollTo(0,0); render(); setTimeout(()=>startTour(k),450) }
 $('#dim').onclick = closeSheet;
 function loadMe(){ if(!API){ BN.offline=true; return }
-  api('/api/me?tz='+new Date().getTimezoneOffset()).then(async j=>{ Object.assign(BN,j,{loaded:true,offline:false}); if(j.profile){ setProf(await migrate(j.profile)); loadTx().catch(()=>{}) } }).catch(()=>{ BN.offline=true })
+  api('/api/me?tz='+new Date().getTimezoneOffset()).then(async j=>{ BLOCK=null; Object.assign(BN,j,{loaded:true,offline:false}); if(j.profile){ setProf(await migrate(j.profile)); loadTx().catch(()=>{}) } }).catch(e=>{ if(e.status===503||e.status===403&&/закрыт/.test(e.message)) BLOCK={ic:e.status===503?'🛠':'🚫',t:e.message}; else BN.offline=true })
     .finally(()=>{ if(!$('#splash')&&!T) render(true) }) }
 function retryMe(){ hap(); BN.offline=false; render(true); loadMe() }
 loadMe();
