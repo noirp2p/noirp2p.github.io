@@ -265,7 +265,20 @@ function aiEmoji(name){ const n=name.toLowerCase().trim(); if(!n) return {e:'✨
 function saveCats(){ store.set('ucats',UCATS); store.set('catsDirty',1);
   if(API&&BN.profile) api('/api/cats',{cats:UCATS}).then(()=>{ try{localStorage.removeItem('noir_catsDirty')}catch(e){} }).catch(e=>toast(e.message)) }
 function newCat(){ loadEDB(); sh.nc={n:'',e:'✨',pick:false}; drawSheet(); setTimeout(()=>{ const i=$('#ncN'); if(i) i.focus() },60) }
-function ncType(v){ sh.nc.n=v; if(!sh.nc.pick){ const a=aiEmoji(v), el=$('#ncE'); if(a.e!==sh.nc.e&&el){ sh.nc.e=a.e; el.textContent=a.e; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop') } $('#ncS').innerHTML=ncSug(a.sug); $('#ncAi').textContent=v.trim()?(a.sure?'🤖 ИИ подобрал значок — можно выбрать другой':'🤖 Не уверен в значке — выберите подходящий ниже'):'🤖 Впишите название — ИИ подберёт значок' } }
+function ncType(v){ sh.nc.n=v; if(!sh.nc.pick){ const a=aiEmoji(v), el=$('#ncE'); if(a.e!==sh.nc.e&&el){ sh.nc.e=a.e; el.textContent=a.e; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop') } $('#ncS').innerHTML=ncSug(a.sug); $('#ncAi').textContent=v.trim()?(a.sure?'🤖 ИИ подобрал значок — можно выбрать другой':'🤖 Не уверен в значке — выберите подходящий ниже'):'🤖 Впишите название — ИИ подберёт значок' } aiAsk(v) }
+// настоящий ИИ (Gemini на сервере бота): уточняет значки, пока человек печатает
+const AIC={};
+function aiAsk(v){ clearTimeout(aiAsk.t); const n=v.trim(); if(n.length<2||!API||!BN.profile) return;
+  const k=sh.mode+'|'+n.toLowerCase(); if(AIC[k]) return aiApply(n,AIC[k]);
+  aiAsk.t=setTimeout(()=>api('/api/ai/emoji?name='+encodeURIComponent(n)+'&t='+sh.mode).then(j=>{ if(j.emoji&&j.emoji.length){ AIC[k]=j.emoji; aiApply(n,j.emoji) } }).catch(()=>{}),650) }
+function aiApply(n,list){ if(!sh.nc||sh.nc.n.trim()!==n) return; const loc=aiEmoji(n), sug=[...new Set([...list,...loc.sug])].slice(0,24);
+  if(!sh.nc.pick){ sh.nc.e=list[0]; const el=$('#ncE'); if(el){ el.textContent=list[0]; el.classList.remove('pop'); void el.offsetWidth; el.classList.add('pop') } }
+  const S=$('#ncS'); if(S) S.innerHTML=ncSug(sug); const A=$('#ncAi'); if(A) A.textContent='🤖 ИИ подобрал значки под «'+n+'» — можно выбрать другой' }
+function openCheck(){ $('#sheetIn').innerHTML=`<div class="grab"></div><div style="display:flex;justify-content:flex-end"><button class="rb2" onclick="closeSheet()">✕</button></div><div style="text-align:center;font-size:44px">🧾</div><b style="display:block;text-align:center;font-size:19px;margin-top:6px">Проверка чека</b>
+   <div class="lb" style="text-align:center;color:#8a7f72;margin:8px auto 0;max-width:320px">Отправьте <b>фото или PDF чека</b> в чат бота. ИИ найдёт сумму, дату и код квитанции, даст кнопку проверки на check.gov.ua и сверит чек с вашим ордером Binance.</div>
+   <div class="grp" style="margin-top:14px"><div class="it"><span class="ie">1️⃣</span><b>Закройте приложение</b></div><div class="it"><span class="ie">2️⃣</span><b>Нажмите 📎 и выберите фото или файл чека</b></div><div class="it"><span class="ie">3️⃣</span><b>Через пару секунд придёт ответ</b></div></div>
+   <button class="gbtn" onclick="exitApp()">Перейти в чат</button><div style="height:8px"></div>`;
+  $('#dim').classList.add('on'); $('#sheet').classList.add('on'); hap('medium') }
 const ncSug = sug => sug.map(e=>`<button class="${e===sh.nc.e?'on':''}" onclick="sh.nc.e='${e}';sh.nc.pick=true;$('#ncE').textContent='${e}';[...this.parentNode.children].forEach(b=>b.classList.remove('on'));this.classList.add('on')">${e}</button>`).join('');
 function addCat(){ const n=(sh.nc.n||'').trim(); if(n.length<2){ toast('Название — хотя бы 2 буквы'); return }
   if(UCATS.some(c=>!c.del&&c.t===sh.mode&&c.n.toLowerCase()===n.toLowerCase())){ toast('Такая категория уже есть'); return }
@@ -357,7 +370,7 @@ function vHome(){
   return `${topBar()}${hello}${warn}
   <div class="card" data-t="today"><div class="lb">Прибыль сегодня</div><div class="big">${sgn(today.profit)} ₴</div><div class="lb">Оборот ${fmt(today.turnover)} ₴ · ${fmt(today.orders)} ордеров</div></div>${budget}
   <div class="row" data-t="week"><div class="card"><div class="lb">Неделя</div><div class="md">${sgn(week.profit)} ₴</div></div><div class="card"><div class="lb">Спред</div><div class="md">${sprU(week)}</div></div></div>
-  <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек</button>
+  <button class="pbtn" data-t="check" onclick="openCheck()">🧾 Проверить чек</button>
   ${chart}`;
 }
 let p2pPeriod='Неделя', p2pFilter='Все', custom=null;
@@ -405,7 +418,7 @@ function vP2P(){
   <div class="card" data-t="bars"><div style="display:flex;justify-content:space-between"><span class="lb">${D.bt}</span><span class="lb">${D.best}</span></div>${bars||`<div class="bars" style="height:auto;min-height:60px;align-items:center;justify-content:center"><span class="lb">${BN.connected?(loading?'Загружаем…':'За этот период продаж нет'):'Здесь появится прибыль, когда подключите Binance'}</span></div>`}</div>
   <div class="sh" data-t="orders"><b>Ордера</b><div class="seg">${['Все','Покупка','Продажа'].map(c=>`<button class="${c===p2pFilter?'on':''}" onclick="p2pFilter='${c}';render()">${c}</button>`).join('')}</div></div>
   ${ords?`<div class="card lt" style="padding:4px 14px">${ords}</div>`:`<div class="card lt" style="text-align:center;padding:22px 16px"><span class="lb">${BN.connected?(loading?'Загружаем ордера…':'За этот период ордеров нет'):'Пока нет ордеров — они подтянутся из Binance автоматически'}</span></div>`}
-  <button class="pbtn" data-t="check" onclick="toast('Проверка чеков — на шаге 7 🧾')">🧾 Проверить чек по ордеру</button>`;
+  <button class="pbtn" data-t="check" onclick="openCheck()">🧾 Проверить чек по ордеру</button>`;
 }
 function vFin(){
   const real = TX.filter(t=>!t.debt);
