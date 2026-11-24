@@ -183,7 +183,10 @@ function perRange(k){ const t=dayStart(Date.now());
   if(k==='Сегодня') return [t, t+DAYMS]; if(k==='Неделя') return [t-6*DAYMS, t+DAYMS]; if(k==='Месяц'){ const d=new Date(t); d.setDate(1); return [+d, t+DAYMS] }  // с 1-го числа текущего месяца
   const [a,b]=k.slice(1).split('_').map(Number); return [a, b+DAYMS] }
 const st = k => STAT[k] && STAT[k].d;
+const curOf = j => PM==='fifo'&&j.fifo ? Object.assign({},j.cur,{profit:j.fifo.profit,bars:j.fifo.bars}) : j.cur;   // способ прибыли
+const totOf = j => PM==='fifo'&&j.fifo&&j.fifo.total!=null ? j.fifo.total : (j.total_profit||0);
 function statsQ(k){ const [a,b]=perRange(k); let pq='';
+  if(k==='Сегодня') pq=`&pfrom=${a-DAYMS}&pto=${Math.min(Date.now(),b)-DAYMS}`;  // «ко вчера» = вчера до этого же времени (24.11)
   if(k==='Месяц'){ const s=new Date(a), e=new Date(b-1); const ps=new Date(s.getFullYear(),s.getMonth()-1,1), pe=new Date(s.getFullYear(),s.getMonth()-1,Math.min(e.getDate(),new Date(s.getFullYear(),s.getMonth(),0).getDate())+1); pq=`&pfrom=${+ps}&pto=${+pe}` }
   return `/api/stats?from=${a}&to=${b}&tz=${new Date().getTimezoneOffset()}${pq}` }
 function ensure(k){ if(!BN.connected || PEND[k] || (STAT[k] && Date.now()-STAT[k].at<60000)) return;
@@ -355,14 +358,14 @@ function vHome(){
   let today={profit:0,turnover:0,orders:0}, week={profit:0,spread:0}, chart='', warn='', budget='';
   if(BN.connected){ ['Сегодня','Неделя','Месяц'].forEach(ensure);
     const a=st('Сегодня'), w=st('Неделя'), m=st('Месяц');
-    if(a&&a.cur) today=a.cur; if(w&&w.cur) week=w.cur;
+    if(a&&a.cur) today=curOf(a); if(w&&w.cur) week=curOf(w);
     const base=(BN.start_uah||0)+(BN.start_usdt||0)*(BN.start_price||0);
-    if(a&&a.cur&&base>0) budget=`<div class="card lt" data-t="budget"><div class="lb">Бюджет сейчас</div><div class="md">${fmt(Math.round(base+(a.total_profit||0)))} ₴</div><div class="lb">${BN.profit_from?'с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+hhmm(BN.profit_from)+' ':''}было ${fmt(Math.round(base))} ₴ · заработано ${sgn(a.total_profit||0)} ₴</div></div>`;
+    if(a&&a.cur&&base>0) budget=`<div class="card lt" data-t="budget"><div class="lb">Бюджет сейчас</div><div class="md">${fmt(Math.round(base+totOf(a)))} ₴</div><div class="lb">${BN.profit_from?'с '+new Date(BN.profit_from).toLocaleDateString('ru-RU',{day:'numeric',month:'short'})+', '+hhmm(BN.profit_from)+' ':''}было ${fmt(Math.round(base))} ₴ · заработано ${sgn(totOf(a))} ₴</div></div>`;
     if(BN.sync_error) warn=`<div class="warn">⚠ ${esc(BN.sync_error)}</div>`;
-    if(m&&m.cur){ let acc=0; const pts=m.cur.bars.map(b=>acc+=b[1]), W=320,H=90, lo=Math.min(0,...pts), hi=Math.max(1,...pts);
+    if(m&&m.cur){ let acc=0; const pts=curOf(m).bars.map(b=>acc+=b[1]), W=320,H=90, lo=Math.min(0,...pts), hi=Math.max(1,...pts);
       const P=pts.map((v,i)=>[i*W/Math.max(pts.length-1,1), H-(v-lo)/(hi-lo)*H*.9-4]);
       const line=P.map((p,i)=>(i?'L':'M')+p[0].toFixed(1)+' '+p[1].toFixed(1)).join(' ');
-      chart=`<div class="card chartc" data-t="chart"><div style="display:flex;justify-content:space-between"><span class="lb">Доход за месяц</span><b>${sgn(m.cur.profit)} ₴</b></div>
+      chart=`<div class="card chartc" data-t="chart"><div style="display:flex;justify-content:space-between"><span class="lb">Доход за месяц</span><b>${sgn(curOf(m).profit)} ₴</b></div>
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><path d="${line} L${W} ${H} L0 ${H}Z" fill="rgba(242,198,204,.18)"/><path d="${line}" fill="none" stroke="#F2C6CC" stroke-width="2.5" stroke-linejoin="round" vector-effect="non-scaling-stroke"/></svg></div>`;
     } else chart=`<div class="card" data-t="chart" style="text-align:center"><span class="lb"><span class="spin"></span>Загружаем ордера из Binance…</span></div>`;
   } else if(BN.offline) chart=OFFLINE_CARD();
@@ -393,7 +396,7 @@ function vP2P(){
   let D = {profit:0, usdt:0, cmp:'нет данных', turn:'0 ₴', ord:0, spr:'0 ₴', buy:'—', sell:'—', bt:'Прибыль за период', best:''}, bars='', ords='', loading=false, err='';
   if(BN.connected){ ensure(key); const j=st(key);
     if(STAT[key]&&STAT[key].err) err=STAT[key].err;
-    if(j&&j.cur){ const F=PM==='fifo'&&j.fifo, c=F?Object.assign({},j.cur,{profit:j.fifo.profit,bars:j.fifo.bars}):j.cur, pv=F?j.fifo.prev:j.prev.profit, ref={'Сегодня':'ко вчера','Неделя':'к прошлой неделе','Месяц':'к тем же дням прошлого месяца'}[key]||'к прошлому периоду';
+    if(j&&j.cur){ const F=PM==='fifo'&&j.fifo, c=curOf(j), pv=F?j.fifo.prev:j.prev.profit, ref={'Сегодня':'ко вчера в это время','Неделя':'к прошлой неделе','Месяц':'к тем же дням прошлого месяца'}[key]||'к прошлому периоду';
       const ch = pv>0 ? Math.round((c.profit-pv)/pv*100) : null;
       D={profit:c.profit, usdt:c.profit/(c.avg_sell||c.avg_buy||41.6), cmp: ch===null?'нет данных для сравнения':(ch>=0?'▲ ':'▼ ')+Math.abs(ch)+'% '+ref,
          turn:fmt(c.turnover)+' ₴', ord:c.orders, spr:sprU(c), buy:rate(c.avg_buy), sell:rate(c.avg_sell), bt:'', best:''};
